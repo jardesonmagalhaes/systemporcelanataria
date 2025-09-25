@@ -260,44 +260,71 @@
             });
         }
         
-        formProjetos.addEventListener("submit", async (e) => { e.preventDefault(); const submitButton = formProjetos.querySelector('button[type="submit"]'); submitButton.disabled = true; submitButton.textContent = 'Salvando...'; const { data: { user } } = await db.auth.getUser(); if (!user) { alert("Sessão expirada."); submitButton.disabled = false; submitButton.textContent = 'Salvar Projeto'; return; } const novoAgendamento = { nome: document.getElementById("nome").value.trim(), valor: parseFloat(document.getElementById("valor").value), gasto: parseFloat(document.getElementById("gasto").value), servico: document.getElementById("servico").value.trim(), data_entrega: document.getElementById("dataEntrega").value, observacoes: document.getElementById("observacoes").value.trim(), user_id: user.id, concluido: false }; const { error } = await db.from('agendamentos').insert([novoAgendamento]); if (error) { console.error("Erro ao salvar projeto:", error); alert("Ocorreu um erro ao salvar o projeto."); submitButton.disabled = false; submitButton.textContent = 'Salvar Projeto'; } else { await carregarDadosErenderizar(); formProjetos.reset(); submitButton.disabled = false; submitButton.textContent = 'Salvar Projeto'; listaAgendamentos.scrollIntoView({ behavior: 'smooth' }); } });
-        
-        filtroMes.addEventListener('change', filtrarErenderizar);
-        filtroAno.addEventListener('change', filtrarErenderizar);
-        
-        window.concluirAgendamento = async function(id) { await db.from('agendamentos').update({ concluido: true }).eq('id', id); carregarDadosErenderizar(); }
-        window.excluirAgendamento = async function(id) { if (confirm("Deseja realmente excluir este projeto?")) { await db.from('agendamentos').delete().eq('id', id); carregarDadosErenderizar(); } }
+        formProjetos.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        console.log("ETAPA 1: Formulário enviado. Botão será desativado.");
 
-        // --- 5. LÓGICA DE AUTENTICAÇÃO E INICIALIZAÇÃO ---
-        db.auth.onAuthStateChange(async (event, session) => { 
-            const authHTML = `<div id="login-container" class="auth-container"><div class="auth-box"><h2 style="text-align: center; color: var(--primary-color); margin-bottom: 25px;">System Porcelanataria</h2><form id="login-form"><label for="login-email">Email</label><input type="email" id="login-email" required /><label for="login-password">Senha</label><input type="password" id="login-password" required /><button type="submit" style="width: 100%;">Entrar</button></form><p id="auth-error" style="color: red; text-align: center; margin-top: 15px;"></p></div></div><div id="update-password-container" class="auth-container hidden"><div class="auth-box"><h2 style="text-align: center; color: var(--primary-color); margin-bottom: 25px;">Crie sua Senha</h2><form id="update-password-form"><label for="new-password">Nova Senha</label><input type="password" id="new-password" required minlength="6" /><button type="submit" style="width: 100%;">Salvar Senha</button></form><p id="update-message" style="text-align: center; margin-top: 15px;"></p></div></div>`;
-            authSection.innerHTML = authHTML;
+        const submitButton = formProjetos.querySelector('button[type="submit"]');
+        submitButton.disabled = true;
+        submitButton.textContent = 'Salvando...';
+
+        try {
+            console.log("ETAPA 2: Buscando informações do usuário...");
+            const { data: { user }, error: userError } = await db.auth.getUser();
             
-            document.getElementById('login-form').addEventListener('submit', async (e) => { e.preventDefault(); document.getElementById('auth-error').textContent = ''; const email = document.getElementById('login-email').value; const password = document.getElementById('login-password').value; const { error } = await db.auth.signInWithPassword({ email, password }); if (error) document.getElementById('auth-error').textContent = 'Email ou senha inválidos.'; });
-            logoutButton.addEventListener('click', () => { db.auth.signOut(); });
-            document.getElementById('update-password-form').addEventListener('submit', async (e) => { e.preventDefault(); const updateMessage = document.getElementById('update-message'); updateMessage.textContent = ''; const password = document.getElementById('new-password').value; const { error } = await db.auth.updateUser({ password: password }); if (error) { updateMessage.style.color = 'red'; updateMessage.textContent = 'Erro: ' + error.message; } else { updateMessage.style.color = 'green'; updateMessage.textContent = 'Senha atualizada! Redirecionando...'; setTimeout(() => { window.location.href = window.location.pathname; }, 2000); } });
-
-            if (session && session.user) {
-                appContainer.classList.remove('hidden');
-                authSection.classList.add('hidden');
-                popularFiltros(); 
-                const hoje = new Date();
-                filtroMes.value = hoje.getMonth();
-                filtroAno.value = hoje.getFullYear();
-                await carregarDadosErenderizar();
-                tabProjetos.click();
-            } else {
-                appContainer.classList.add('hidden');
-                authSection.classList.remove('hidden');
-                if (window.location.hash.includes('##')) {
-                    document.getElementById('login-container').classList.add('hidden');
-                    document.getElementById('update-password-container').classList.remove('hidden');
-                } else {
-                    document.getElementById('login-container').classList.remove('hidden');
-                    document.getElementById('update-password-container').classList.add('hidden');
-                }
+            if (userError) {
+                console.error("ERRO GRAVE ao buscar usuário:", userError);
+                alert("Ocorreu um erro de autenticação. Por favor, recarregue a página.");
+                submitButton.disabled = false;
+                submitButton.textContent = 'Salvar Projeto';
+                return;
             }
-        });
+
+            if (!user) {
+                console.log("Usuário não encontrado. Abortando.");
+                alert("Sessão expirada. Faça login novamente.");
+                submitButton.disabled = false;
+                submitButton.textContent = 'Salvar Projeto';
+                return;
+            }
+
+            console.log("ETAPA 3: Usuário encontrado:", user.email);
+
+            const novoAgendamento = { 
+                nome: document.getElementById("nome").value.trim(), 
+                valor: parseFloat(document.getElementById("valor").value), 
+                gasto: parseFloat(document.getElementById("gasto").value), 
+                servico: document.getElementById("servico").value.trim(), 
+                data_entrega: document.getElementById("dataEntrega").value, 
+                observacoes: document.getElementById("observacoes").value.trim(), 
+                user_id: user.id, 
+                concluido: false 
+            };
+            
+            console.log("ETAPA 4: Tentando salvar o seguinte objeto no Supabase:", novoAgendamento);
+            const { error } = await db.from('agendamentos').insert([novoAgendamento]);
+            console.log("ETAPA 5: A operação de salvar no Supabase terminou.");
+
+            if (error) {
+                console.error("ERRO do Supabase ao salvar:", error);
+                alert("Ocorreu um erro ao salvar o projeto. Verifique o console.");
+                submitButton.disabled = false;
+                submitButton.textContent = 'Salvar Projeto';
+            } else {
+                console.log("ETAPA 6: Salvo com SUCESSO! Atualizando a lista.");
+                await carregarDadosErenderizar();
+                formProjetos.reset();
+                submitButton.disabled = false;
+                submitButton.textContent = 'Salvar Projeto';
+                listaAgendamentos.scrollIntoView({ behavior: 'smooth' });
+            }
+        } catch (catchError) {
+            console.error("ERRO INESPERADO (CATCH):", catchError);
+            alert("Ocorreu um erro completamente inesperado. Verifique o console.");
+            submitButton.disabled = false;
+            submitButton.textContent = 'Salvar Projeto';
+        }
+    });
     </script>
 </body>
 </html>
