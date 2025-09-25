@@ -141,10 +141,9 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <script>
-        // --- 1. CONFIGURAÇÃO DO SUPABASE (COM A CHAVE CORRIGIDA) ---
+        // --- 1. CONFIGURAÇÃO DO SUPABASE ---
         const SUPABASE_URL = 'https://lsvlfrqqpnryjqskiwkj.supabase.co'; 
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxzdmxmcnFxcG5yeWpxc2tpd2tqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg3NTA5NDIsImV4cCI6MjA3NDMyNjk0Mn0.nKiTPAdGcHKE0KweKVCT2ef3ta267Pprlhmj_-FYpSo';
-
         const { createClient } = supabase;
         const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -170,161 +169,113 @@
 
         // --- 4. FUNÇÕES GERAIS E DE PROJETOS ---
         const moeda = (valor) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(valor || 0);
-
-        function popularFiltros() {
-            const anoAtual = new Date().getFullYear();
-            filtroAno.innerHTML = '';
-            for (let i = anoAtual; i >= anoAtual - 5; i--) {
-                filtroAno.add(new Option(i, i));
-            }
-            const meses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
-            filtroMes.innerHTML = '<option value="todos">Todos os Meses</option>';
-            meses.forEach((mes, index) => {
-                filtroMes.add(new Option(mes, index));
-            });
-        }
-        
+        function popularFiltros() { const anoAtual = new Date().getFullYear(); filtroAno.innerHTML = ''; for (let i = anoAtual; i >= anoAtual - 5; i--) { filtroAno.add(new Option(i, i)); } const meses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"]; filtroMes.innerHTML = '<option value="todos">Todos os Meses</option>'; meses.forEach((mes, index) => { filtroMes.add(new Option(mes, index)); }); }
         function criarAgendamentoHTML(agendamento) { const div = document.createElement("div"); div.className = "agendamento"; div.id = `projeto-${agendamento.id}`; const dataFormatada = new Date(agendamento.data_entrega + 'T03:00:00').toLocaleDateString('pt-BR'); const obsHTML = agendamento.observacoes ? `<p><strong>Observações:</strong></p><p class="observacoes-texto">${agendamento.observacoes}</p>` : ''; div.innerHTML = `<h3>${agendamento.nome}</h3><p><strong>Serviço:</strong> ${agendamento.servico}</p><p><strong>Valor:</strong> ${moeda(agendamento.valor)}</p><p><strong>Gasto:</strong> ${moeda(agendamento.gasto)}</p><p><strong>Data de entrega:</strong> ${dataFormatada}</p><p class="status">Status: ${agendamento.concluido ? "✅ Concluído" : "⏳ Pendente"}</p><div class="botoes-acao">${!agendamento.concluido ? `<button class="acao concluir" onclick="concluirAgendamento(${agendamento.id})">Concluir</button>` : ``}<button class="acao excluir" onclick="excluirAgendamento(${agendamento.id})">Excluir</button></div>`; return div; }
-        
         async function carregarDadosErenderizar() { const { data: { user } } = await db.auth.getUser(); if (!user) return; const { data, error } = await db.from('agendamentos').select('*').eq('user_id', user.id).order('data_entrega', { ascending: true }); if (error) { console.error("Erro ao buscar agendamentos", error); return; } agendamentos = data; filtrarErenderizar(); }
-        
-        function filtrarErenderizar() {
-            const mesSelecionado = filtroMes.value;
-            const anoSelecionado = filtroAno.value;
-            let agendamentosFiltrados = agendamentos;
-            if (anoSelecionado) {
-                if (mesSelecionado !== 'todos') { agendamentosFiltrados = agendamentos.filter(a => { const dataEntrega = new Date(a.data_entrega + 'T03:00:00'); return dataEntrega.getMonth() == mesSelecionado && dataEntrega.getFullYear() == anoSelecionado; });
-                } else { agendamentosFiltrados = agendamentos.filter(a => { const dataEntrega = new Date(a.data_entrega + 'T03:00:00'); return dataEntrega.getFullYear() == anoSelecionado; }); }
-            }
-            containerProjetos.innerHTML = ""; if (agendamentosFiltrados.length === 0) { containerProjetos.innerHTML = "<p style='text-align:center;'>Nenhum projeto encontrado para este período.</p>"; } else { agendamentosFiltrados.forEach(item => { const agendamentoDiv = criarAgendamentoHTML(item); containerProjetos.appendChild(agendamentoDiv); }); }
-            atualizarResumo(agendamentosFiltrados);
-            renderizarGraficoFinanceiro(agendamentos);
-        }
-        
+        function filtrarErenderizar() { const mesSelecionado = filtroMes.value; const anoSelecionado = filtroAno.value; let agendamentosFiltrados = agendamentos; if (anoSelecionado) { if (mesSelecionado !== 'todos') { agendamentosFiltrados = agendamentos.filter(a => { const dataEntrega = new Date(a.data_entrega + 'T03:00:00'); return dataEntrega.getMonth() == mesSelecionado && dataEntrega.getFullYear() == anoSelecionado; }); } else { agendamentosFiltrados = agendamentos.filter(a => { const dataEntrega = new Date(a.data_entrega + 'T03:00:00'); return dataEntrega.getFullYear() == anoSelecionado; }); } } containerProjetos.innerHTML = ""; if (agendamentosFiltrados.length === 0) { containerProjetos.innerHTML = "<p style='text-align:center;'>Nenhum projeto encontrado para este período.</p>"; } else { agendamentosFiltrados.forEach(item => { const agendamentoDiv = criarAgendamentoHTML(item); containerProjetos.appendChild(agendamentoDiv); }); } atualizarResumo(agendamentosFiltrados); renderizarGraficoFinanceiro(agendamentos); }
         function atualizarResumo(dadosParaResumo) { const agendamentosConcluidos = dadosParaResumo.filter(a => a.concluido); const ganhos = agendamentosConcluidos.reduce((acc, a) => acc + a.valor, 0); const gastos = agendamentosConcluidos.reduce((acc, a) => acc + a.gasto, 0); document.getElementById("ganhosMes").textContent = moeda(ganhos); document.getElementById("gastosMes").textContent = moeda(gastos); document.getElementById("lucroMes").textContent = moeda(ganhos - gastos); }
-
-        function renderizarGraficoFinanceiro(dados) {
-            const ctx = document.getElementById('grafico-financeiro').getContext('2d');
-            const labels = [];
-            const ganhosData = [];
-            const gastosData = [];
-            
-            const hoje = new Date();
-            for (let i = 5; i >= 0; i--) {
-                const d = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
-                labels.push(d.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' }));
-                
-                const projetosDoMes = dados.filter(p => {
-                    const dataProjeto = new Date(p.data_entrega + 'T03:00:00');
-                    return p.concluido && dataProjeto.getMonth() === d.getMonth() && dataProjeto.getFullYear() === d.getFullYear();
-                });
-
-                const ganhosMes = projetosDoMes.reduce((acc, p) => acc + p.valor, 0);
-                const gastosMes = projetosDoMes.reduce((acc, p) => acc + p.gasto, 0);
-                ganhosData.push(ganhosMes);
-                gastosData.push(gastosMes);
-            }
-
-            if (graficoFinanceiro) {
-                graficoFinanceiro.destroy();
-            }
-
-            graficoFinanceiro = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Ganhos',
-                        data: ganhosData,
-                        backgroundColor: 'rgba(10, 116, 218, 0.7)',
-                        borderColor: 'rgba(10, 116, 218, 1)',
-                        borderWidth: 1,
-                        borderRadius: 5
-                    }, {
-                        label: 'Gastos',
-                        data: gastosData,
-                        backgroundColor: 'rgba(220, 53, 69, 0.7)',
-                        borderColor: 'rgba(220, 53, 69, 1)',
-                        borderWidth: 1,
-                        borderRadius: 5
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        y: { beginAtZero: true, ticks: { callback: (value) => moeda(value) } },
-                        x: { grid: { display: false } }
-                    },
-                    plugins: { legend: { position: 'top' }, tooltip: { callbacks: { label: (context) => `${context.dataset.label}: ${moeda(context.raw)}` } } }
-                }
-            });
-        }
+        function renderizarGraficoFinanceiro(dados) { const ctx = document.getElementById('grafico-financeiro').getContext('2d'); const labels = []; const ganhosData = []; const gastosData = []; const hoje = new Date(); for (let i = 5; i >= 0; i--) { const d = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1); labels.push(d.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' })); const projetosDoMes = dados.filter(p => { const dataProjeto = new Date(p.data_entrega + 'T03:00:00'); return p.concluido && dataProjeto.getMonth() === d.getMonth() && dataProjeto.getFullYear() === d.getFullYear(); }); const ganhosMes = projetosDoMes.reduce((acc, p) => acc + p.valor, 0); const gastosMes = projetosDoMes.reduce((acc, p) => acc + p.gasto, 0); ganhosData.push(ganhosMes); gastosData.push(gastosMes); } if (graficoFinanceiro) { graficoFinanceiro.destroy(); } graficoFinanceiro = new Chart(ctx, { type: 'bar', data: { labels: labels, datasets: [{ label: 'Ganhos', data: ganhosData, backgroundColor: 'rgba(10, 116, 218, 0.7)', borderColor: 'rgba(10, 116, 218, 1)', borderWidth: 1, borderRadius: 5 }, { label: 'Gastos', data: gastosData, backgroundColor: 'rgba(220, 53, 69, 0.7)', borderColor: 'rgba(220, 53, 69, 1)', borderWidth: 1, borderRadius: 5 }] }, options: { responsive: true, scales: { y: { beginAtZero: true, ticks: { callback: (value) => moeda(value) } }, x: { grid: { display: false } } }, plugins: { legend: { position: 'top' }, tooltip: { callbacks: { label: (context) => `${context.dataset.label}: ${moeda(context.raw)}` } } } } }); }
         
+        // --- FUNÇÃO DE SALVAR COM TESTES DE DIAGNÓSTICO ---
         formProjetos.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        console.log("ETAPA 1: Formulário enviado. Botão será desativado.");
+            e.preventDefault();
+            console.log("ETAPA 1: Formulário enviado. Botão será desativado.");
 
-        const submitButton = formProjetos.querySelector('button[type="submit"]');
-        submitButton.disabled = true;
-        submitButton.textContent = 'Salvando...';
+            const submitButton = formProjetos.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+            submitButton.textContent = 'Salvando...';
 
-        try {
-            console.log("ETAPA 2: Buscando informações do usuário...");
-            const { data: { user }, error: userError } = await db.auth.getUser();
-            
-            if (userError) {
-                console.error("ERRO GRAVE ao buscar usuário:", userError);
-                alert("Ocorreu um erro de autenticação. Por favor, recarregue a página.");
+            try {
+                console.log("ETAPA 2: Buscando informações do usuário...");
+                const { data: { user }, error: userError } = await db.auth.getUser();
+                
+                if (userError) {
+                    console.error("ERRO GRAVE ao buscar usuário:", userError);
+                    alert("Ocorreu um erro de autenticação. Por favor, recarregue a página.");
+                    submitButton.disabled = false;
+                    submitButton.textContent = 'Salvar Projeto';
+                    return;
+                }
+
+                if (!user) {
+                    console.log("Usuário não encontrado. Abortando.");
+                    alert("Sessão expirada. Faça login novamente.");
+                    submitButton.disabled = false;
+                    submitButton.textContent = 'Salvar Projeto';
+                    return;
+                }
+
+                console.log("ETAPA 3: Usuário encontrado:", user.email);
+
+                const novoAgendamento = { 
+                    nome: document.getElementById("nome").value.trim(), 
+                    valor: parseFloat(document.getElementById("valor").value), 
+                    gasto: parseFloat(document.getElementById("gasto").value), 
+                    servico: document.getElementById("servico").value.trim(), 
+                    data_entrega: document.getElementById("dataEntrega").value, 
+                    observacoes: document.getElementById("observacoes").value.trim(), 
+                    user_id: user.id, 
+                    concluido: false 
+                };
+                
+                console.log("ETAPA 4: Tentando salvar o seguinte objeto no Supabase:", novoAgendamento);
+                const { error } = await db.from('agendamentos').insert([novoAgendamento]);
+                console.log("ETAPA 5: A operação de salvar no Supabase terminou.");
+
+                if (error) {
+                    console.error("ERRO do Supabase ao salvar:", error);
+                    alert("Ocorreu um erro ao salvar o projeto. Verifique o console.");
+                    submitButton.disabled = false;
+                    submitButton.textContent = 'Salvar Projeto';
+                } else {
+                    console.log("ETAPA 6: Salvo com SUCESSO! Atualizando a lista.");
+                    await carregarDadosErenderizar();
+                    formProjetos.reset();
+                    submitButton.disabled = false;
+                    submitButton.textContent = 'Salvar Projeto';
+                    listaAgendamentos.scrollIntoView({ behavior: 'smooth' });
+                }
+            } catch (catchError) {
+                console.error("ERRO INESPERADO (CATCH):", catchError);
+                alert("Ocorreu um erro completamente inesperado. Verifique o console.");
                 submitButton.disabled = false;
                 submitButton.textContent = 'Salvar Projeto';
-                return;
             }
+        });
+        
+        filtroMes.addEventListener('change', filtrarErenderizar);
+        filtroAno.addEventListener('change', filtrarErenderizar);
+        window.concluirAgendamento = async function(id) { await db.from('agendamentos').update({ concluido: true }).eq('id', id); carregarDadosErenderizar(); }
+        window.excluirAgendamento = async function(id) { if (confirm("Deseja realmente excluir este projeto?")) { await db.from('agendamentos').delete().eq('id', id); carregarDadosErenderizar(); } }
 
-            if (!user) {
-                console.log("Usuário não encontrado. Abortando.");
-                alert("Sessão expirada. Faça login novamente.");
-                submitButton.disabled = false;
-                submitButton.textContent = 'Salvar Projeto';
-                return;
-            }
-
-            console.log("ETAPA 3: Usuário encontrado:", user.email);
-
-            const novoAgendamento = { 
-                nome: document.getElementById("nome").value.trim(), 
-                valor: parseFloat(document.getElementById("valor").value), 
-                gasto: parseFloat(document.getElementById("gasto").value), 
-                servico: document.getElementById("servico").value.trim(), 
-                data_entrega: document.getElementById("dataEntrega").value, 
-                observacoes: document.getElementById("observacoes").value.trim(), 
-                user_id: user.id, 
-                concluido: false 
-            };
-            
-            console.log("ETAPA 4: Tentando salvar o seguinte objeto no Supabase:", novoAgendamento);
-            const { error } = await db.from('agendamentos').insert([novoAgendamento]);
-            console.log("ETAPA 5: A operação de salvar no Supabase terminou.");
-
-            if (error) {
-                console.error("ERRO do Supabase ao salvar:", error);
-                alert("Ocorreu um erro ao salvar o projeto. Verifique o console.");
-                submitButton.disabled = false;
-                submitButton.textContent = 'Salvar Projeto';
-            } else {
-                console.log("ETAPA 6: Salvo com SUCESSO! Atualizando a lista.");
+        // --- LÓGICA DE AUTENTICAÇÃO E INICIALIZAÇÃO ---
+        db.auth.onAuthStateChange(async (event, session) => { 
+            const authHTML = `<div id="login-container" class="auth-container"><div class="auth-box"><h2 style="text-align: center; color: var(--primary-color); margin-bottom: 25px;">System Porcelanataria</h2><form id="login-form"><label for="login-email">Email</label><input type="email" id="login-email" required /><label for="login-password">Senha</label><input type="password" id="login-password" required /><button type="submit" style="width: 100%;">Entrar</button></form><p id="auth-error" style="color: red; text-align: center; margin-top: 15px;"></p></div></div><div id="update-password-container" class="auth-container hidden"><div class="auth-box"><h2 style="text-align: center; color: var(--primary-color); margin-bottom: 25px;">Crie sua Senha</h2><form id="update-password-form"><label for="new-password">Nova Senha</label><input type="password" id="new-password" required minlength="6" /><button type="submit" style="width: 100%;">Salvar Senha</button></form><p id="update-message" style="text-align: center; margin-top: 15px;"></p></div></div>`;
+            authSection.innerHTML = authHTML;
+            document.getElementById('login-form').addEventListener('submit', async (e) => { e.preventDefault(); document.getElementById('auth-error').textContent = ''; const email = document.getElementById('login-email').value; const password = document.getElementById('login-password').value; const { error } = await db.auth.signInWithPassword({ email, password }); if (error) document.getElementById('auth-error').textContent = 'Email ou senha inválidos.'; });
+            logoutButton.addEventListener('click', () => { db.auth.signOut(); });
+            document.getElementById('update-password-form').addEventListener('submit', async (e) => { e.preventDefault(); const updateMessage = document.getElementById('update-message'); updateMessage.textContent = ''; const password = document.getElementById('new-password').value; const { error } = await db.auth.updateUser({ password: password }); if (error) { updateMessage.style.color = 'red'; updateMessage.textContent = 'Erro: ' + error.message; } else { updateMessage.style.color = 'green'; updateMessage.textContent = 'Senha atualizada! Redirecionando...'; setTimeout(() => { window.location.href = window.location.pathname; }, 2000); } });
+            if (session && session.user) {
+                appContainer.classList.remove('hidden');
+                authSection.classList.add('hidden');
+                popularFiltros(); 
+                const hoje = new Date();
+                filtroMes.value = hoje.getMonth();
+                filtroAno.value = hoje.getFullYear();
                 await carregarDadosErenderizar();
-                formProjetos.reset();
-                submitButton.disabled = false;
-                submitButton.textContent = 'Salvar Projeto';
-                listaAgendamentos.scrollIntoView({ behavior: 'smooth' });
+                tabProjetos.click();
+            } else {
+                appContainer.classList.add('hidden');
+                authSection.classList.remove('hidden');
+                if (window.location.hash.includes('##')) {
+                    document.getElementById('login-container').classList.add('hidden');
+                    document.getElementById('update-password-container').classList.remove('hidden');
+                } else {
+                    document.getElementById('login-container').classList.remove('hidden');
+                    document.getElementById('update-password-container').classList.add('hidden');
+                }
             }
-        } catch (catchError) {
-            console.error("ERRO INESPERADO (CATCH):", catchError);
-            alert("Ocorreu um erro completamente inesperado. Verifique o console.");
-            submitButton.disabled = false;
-            submitButton.textContent = 'Salvar Projeto';
-        }
-    });
+        });
     </script>
 </body>
 </html>
