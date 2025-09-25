@@ -161,6 +161,8 @@
             containerProjetos.innerHTML = "";
             if (agendamentos.length > 0) {
                 agendamentos.forEach(item => containerProjetos.appendChild(criarAgendamentoHTML(item)));
+            } else {
+                containerProjetos.innerHTML = "<p style='text-align:center;'>Nenhum projeto cadastrado ainda.</p>";
             }
             atualizarResumo();
         }
@@ -237,7 +239,7 @@
                     updatePasswordContainer.classList.add('hidden');
                 }
             }
-        }});
+        });
     </script>
 </body>
 </html>
