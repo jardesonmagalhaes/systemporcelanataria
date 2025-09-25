@@ -145,7 +145,7 @@
     <script>
         // --- 1. CONFIGURAÇÃO DO SUPABASE ---
         const SUPABASE_URL = 'https://lsvlfrqqpnryjqskiwkj.supabase.co'; 
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxzdmxmcnFxcG5yeWpxc2tpd2tqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg3NTA5NDIsImV4cCI6MjA3NDMyNjk0Mn0.nKiTPAdGcHKE0KweKVCT2ef3ta267Pprlhmj_-FYpSo';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzIñNiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxzdmxmcnFxcG5yeWpxc2tpd2tqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg3NTA5NDIsImV4cCI6MjA3NDMyNjk0Mn0.nKiTPAdGcHKE0KweKVCT2ef3ta267Pprlhmj_-FYpSo';
         const { createClient } = supabase;
         const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -170,12 +170,7 @@
         // --- 3. LÓGICA DE NAVEGAÇÃO E EVENTOS PRINCIPAIS ---
         tabProjetos.addEventListener('click', () => { tabProjetos.classList.add('active'); tabCaixa.classList.remove('active'); projetosSection.classList.remove('hidden'); caixaSection.classList.add('hidden'); });
         tabCaixa.addEventListener('click', () => { tabCaixa.classList.add('active'); tabProjetos.classList.remove('active'); caixaSection.classList.remove('hidden'); projetosSection.classList.add('hidden'); });
-        
-        // CORREÇÃO 2: Botão de logout movido para fora do onAuthStateChange
-        // Isso garante que o evento seja adicionado apenas uma vez.
-        logoutButton.addEventListener('click', () => { 
-            db.auth.signOut(); 
-        });
+        logoutButton.addEventListener('click', () => { db.auth.signOut(); });
 
         // --- 4. FUNÇÕES GERAIS E DE PROJETOS ---
         const moeda = (valor) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(valor || 0);
@@ -185,11 +180,9 @@
             const div = document.createElement("div"); 
             div.className = "agendamento"; 
             div.id = `projeto-${agendamento.id}`; 
-            const dataFormatada = new Date(agendamento.data_entrega + 'T03:00:00').toLocaleDateDateString('pt-BR'); 
+            const dataFormatada = new Date(agendamento.data_entrega + 'T03:00:00').toLocaleDateString('pt-BR'); 
             const obsHTML = agendamento.observacoes ? `<p><strong>Observações:</strong></p><p class="observacoes-texto">${agendamento.observacoes}</p>` : ''; 
             
-            // CORREÇÃO 1: A linha abaixo estava com erros de sintaxe (faltavam crases ``).
-            // O texto não estava sendo tratado como um "template literal", o que quebrava o script.
             div.innerHTML = `
                 <h3>${agendamento.nome}</h3>
                 <p><strong>Serviço:</strong> ${agendamento.servico}</p>
@@ -206,7 +199,31 @@
         }
 
         async function carregarDadosErenderizar() { if (!currentUser) return; const { data, error } = await db.from('agendamentos').select('*').eq('user_id', currentUser.id).order('data_entrega', { ascending: true }); if (error) { console.error("Erro ao buscar agendamentos", error); return; } agendamentos = data; filtrarErenderizar(); }
-        function filtrarErenderizar() { const mesSelecionado = filtroMes.value; const anoSelecionado = filtroAno.value; let agendamentosFiltrados = agendamentos; if (anoSelecionado) { if (mesSelecionado !== 'todos') { agendamentosFiltrados = agendamentos.filter(a => { const dataEntrega = new Date(a.data_entrega + 'T03:00:00'); return dataEntrega.getMonth() == mesSelecionado && dataEntrega.getFullYear() == anoSelecionado; }); } else { agendamentosFiltrados = agendamentos.filter(a => { const dataEntrega = new Date(a.data_entrega + 'T03:00:00'); return dataEntrega.getFullYear() == anoSelecionado; }); } } containerProjetos.innerHTML = ""; if (agendamentosFiltrados.length === 0) { containerProjetos.innerHTML = "<p style='text-align:center;'>Nenhum projeto encontrado para este período.</p>"; } else { agendamentosFiltrados.forEach(item => { const agendamentoDiv = criarAgendamentoHTML(item); containerProjetos.appendChild(agendamentoDiv); }); } atualizarResumo(agendamentosFiltrados); renderizarGraficoFinanceiro(agendamentos); }
+        
+        function filtrarErenderizar() { 
+            const mesSelecionado = filtroMes.value; 
+            const anoSelecionado = filtroAno.value; 
+            
+            // CORREÇÃO FINAL: A variável estava com um 'e' a mais no final (agendamentosFiltradose)
+            let agendamentosFiltrados = agendamentos; 
+
+            if (anoSelecionado) { 
+                if (mesSelecionado !== 'todos') { 
+                    agendamentosFiltrados = agendamentos.filter(a => { const dataEntrega = new Date(a.data_entrega + 'T03:00:00'); return dataEntrega.getMonth() == mesSelecionado && dataEntrega.getFullYear() == anoSelecionado; }); 
+                } else { 
+                    agendamentosFiltrados = agendamentos.filter(a => { const dataEntrega = new Date(a.data_entrega + 'T03:00:00'); return dataEntrega.getFullYear() == anoSelecionado; }); 
+                } 
+            } 
+            containerProjetos.innerHTML = ""; 
+            if (agendamentosFiltrados.length === 0) { 
+                containerProjetos.innerHTML = "<p style='text-align:center;'>Nenhum projeto encontrado para este período.</p>"; 
+            } else { 
+                agendamentosFiltrados.forEach(item => { const agendamentoDiv = criarAgendamentoHTML(item); containerProjetos.appendChild(agendamentoDiv); }); 
+            } 
+            atualizarResumo(agendamentosFiltrados); 
+            renderizarGraficoFinanceiro(agendamentos); 
+        }
+
         function atualizarResumo(dadosParaResumo) { const agendamentosConcluidos = dadosParaResumo.filter(a => a.concluido); const ganhos = agendamentosConcluidos.reduce((acc, a) => acc + a.valor, 0); const gastos = agendamentosConcluidos.reduce((acc, a) => acc + a.gasto, 0); document.getElementById("ganhosMes").textContent = moeda(ganhos); document.getElementById("gastosMes").textContent = moeda(gastos); document.getElementById("lucroMes").textContent = moeda(ganhos - gastos); }
         function renderizarGraficoFinanceiro(dados) { const ctx = document.getElementById('grafico-financeiro').getContext('2d'); const labels = []; const ganhosData = []; const gastosData = []; const hoje = new Date(); for (let i = 5; i >= 0; i--) { const d = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1); labels.push(d.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' })); const projetosDoMes = dados.filter(p => { const dataProjeto = new Date(p.data_entrega + 'T03:00:00'); return p.concluido && dataProjeto.getMonth() === d.getMonth() && dataProjeto.getFullYear() === d.getFullYear(); }); const ganhosMes = projetosDoMes.reduce((acc, p) => acc + p.valor, 0); const gastosMes = projetosDoMes.reduce((acc, p) => acc + p.gasto, 0); ganhosData.push(ganhosMes); gastosData.push(gastosMes); } if (graficoFinanceiro) { graficoFinanceiro.destroy(); } graficoFinanceiro = new Chart(ctx, { type: 'bar', data: { labels: labels, datasets: [{ label: 'Ganhos', data: ganhosData, backgroundColor: 'rgba(10, 116, 218, 0.7)', borderColor: 'rgba(10, 116, 218, 1)', borderWidth: 1, borderRadius: 5 }, { label: 'Gastos', data: gastosData, backgroundColor: 'rgba(220, 53, 69, 0.7)', borderColor: 'rgba(220, 53, 69, 1)', borderWidth: 1, borderRadius: 5 }] }, options: { responsive: true, scales: { y: { beginAtZero: true, ticks: { callback: (value) => moeda(value) } }, x: { grid: { display: false } } }, plugins: { legend: { position: 'top' }, tooltip: { callbacks: { label: (context) => `${context.dataset.label}: ${moeda(context.raw)}` } } } } }); }
         
@@ -262,7 +279,7 @@
                 currentUser = session.user;
                 appContainer.classList.remove('hidden');
                 authSection.classList.add('hidden');
-                authSection.innerHTML = ''; // Limpa a área de login
+                authSection.innerHTML = '';
                 
                 popularFiltros(); 
                 const hoje = new Date();
