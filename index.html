@@ -142,14 +142,13 @@
 
     <script>
         // --- 1. CONFIGURAÇÃO DO SUPABASE (COM A CHAVE CORRIGIDA) ---
-       const SUPABASE_URL = 'https://lsvlfrqqpnryjqskiwkj.supabase.co'; 
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxzdmxmcnFxcG5yeWpxc2tpd2tqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg3NTA5NDIsImV4cCI6MjA3NDMyNjk0Mn0.nKiTPAdGcHKE0KweKVCT2ef3ta267Pprlhmj_-FYpSo'; // <-- USE ESTA
-        
+        const SUPABASE_URL = 'https://lsvlfrqqpnryjqskiwkj.supabase.co'; 
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxzdmxmcnFxcG5yeWpxc2tpd2tqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg3NTA5NDIsImV4cCI6MjA3NDMyNjk0Mn0.nKiTPAdGcHKE0KweKVCT2ef3ta267Pprlhmj_-FYpSo';
+
         const { createClient } = supabase;
         const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         // --- 2. SELETORES DE ELEMENTOS ---
-        // ... (todo o resto do JavaScript é idêntico ao anterior)
         const authSection = document.getElementById('auth-section');
         const appContainer = document.getElementById('app-container');
         const logoutButton = document.getElementById('logout-button');
