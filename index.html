@@ -8,71 +8,78 @@
     <link rel="apple-touch-icon" href="images/icon-192x192.png">
     <link rel="icon" href="favicon.ico" type="image/x-icon">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --primary-color: #0a74da;
             --dark-primary: #064a9e;
-            --light-gray: #f4f6f9;
+            --light-gray: #f0f2f5; /* Fundo um pouco mais escuro */
             --text-color: #333;
-            --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --text-light: #6c757d;
+            --white: #ffffff;
+            --green: #28a745;
+            --red: #dc3545;
+            --card-shadow: 0 4px 25px rgba(0, 0, 0, 0.07);
             --border-radius: 12px;
         }
         html { scroll-behavior: smooth; }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Poppins", sans-serif; }
         body { background-color: var(--light-gray); color: var(--text-color); }
-        .container { max-width: 900px; margin: 0 auto; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; padding: 20px; }
         header { text-align: center; margin-bottom: 20px; position: relative; }
-        header h1 { font-size: 2.2rem; color: var(--primary-color); font-weight: 700; }
-        header p { color: #555; margin-top: 5px; }
-        #logout-button { background: #e74c3c; color: white; padding: 8px 15px; border: none; border-radius: 8px; cursor: pointer; position: absolute; top: 0; right: 0; transition: background 0.3s; }
-        #logout-button:hover { background: #c0392b; }
+        header h1 { font-size: 2.5rem; color: var(--primary-color); font-weight: 700; letter-spacing: -1px; }
+        header p { color: var(--text-light); margin-top: 5px; font-size: 1.1rem; }
+        #logout-button { background: var(--red); color: white; padding: 8px 15px; border: none; border-radius: 8px; cursor: pointer; position: absolute; top: 0; right: 0; transition: all 0.3s; }
+        #logout-button:hover { background: #c0392b; transform: translateY(-2px); }
         
         .nav-tabs { display: flex; gap: 10px; border-bottom: 2px solid #ddd; margin-bottom: 30px; }
-        .nav-tab { padding: 10px 20px; cursor: pointer; background: transparent; border: none; font-size: 1.1rem; font-weight: 500; color: #777; border-bottom: 3px solid transparent; }
+        .nav-tab { padding: 10px 20px; cursor: pointer; background: transparent; border: none; font-size: 1.1rem; font-weight: 600; color: var(--text-light); border-bottom: 4px solid transparent; transition: all 0.3s; }
         .nav-tab.active { color: var(--primary-color); border-bottom-color: var(--primary-color); }
 
-        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;}
-        .section-header h2 { color: var(--text-color); }
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;}
+        .section-header h2 { font-size: 1.8rem; font-weight: 600; color: var(--text-color); }
         #filtro-container { display: flex; gap: 15px; align-items: center; }
 
-        .resumo { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
-        .card-resumo { background: white; padding: 25px; border-radius: var(--border-radius); box-shadow: var(--card-shadow); text-align: center; }
-        .card-resumo h3 { font-size: 1rem; font-weight: 500; color: #777; margin-bottom: 8px; }
-        .card-resumo p { font-size: 1.8rem; font-weight: 600; color: var(--primary-color); }
+        .resumo { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 25px; }
+        .card-resumo { background: var(--white); display: flex; align-items: center; gap: 20px; padding: 25px; border-radius: var(--border-radius); box-shadow: var(--card-shadow); transition: all 0.3s; }
+        .card-resumo:hover { transform: translateY(-5px); box-shadow: 0 8px 30px rgba(0,0,0,0.1); }
+        .card-resumo .icon { font-size: 2.5rem; padding: 15px; border-radius: 50%; display: grid; place-items: center; }
+        .card-resumo .icon.green { background: #e9f7ef; color: var(--green); }
+        .card-resumo .icon.red { background: #fceeee; color: var(--red); }
+        .card-resumo .icon.blue { background: #e7f3fe; color: var(--primary-color); }
+        .card-resumo .text h3 { font-size: 1rem; font-weight: 500; color: var(--text-light); margin-bottom: 5px; }
+        .card-resumo .text p { font-size: 1.8rem; font-weight: 700; color: var(--text-color); }
+
+        #grafico-container { background: var(--white); padding: 25px; border-radius: var(--border-radius); box-shadow: var(--card-shadow); margin-top: 30px; }
         
-        form { background: white; padding: 30px; border-radius: var(--border-radius); box-shadow: var(--card-shadow); margin-bottom: 40px; }
-        form h2 { margin-bottom: 20px; color: var(--primary-color); font-weight: 600; }
-        form label { display: block; margin-bottom: 5px; font-weight: 500; color: #555; }
-        form input, form textarea, form select { width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #ccc; font-size: 1rem; transition: border-color 0.3s, box-shadow 0.3s; background-color: white; }
-        form input:focus, form textarea:focus, form select:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(10, 116, 218, 0.2); }
-        form button { background: var(--primary-color); color: white; padding: 12px 25px; border: none; border-radius: 8px; cursor: pointer; font-size: 1rem; font-weight: 500; transition: background 0.3s; }
-        form button:hover { background: var(--dark-primary); }
-        form button:disabled { background: #aaa; cursor: not-allowed; }
+        form { background: var(--white); padding: 30px; border-radius: var(--border-radius); box-shadow: var(--card-shadow); margin-bottom: 40px; }
+        form h2 { margin-bottom: 25px; color: var(--primary-color); font-weight: 600; font-size: 1.5rem; }
+        form label { display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-light); }
+        form input, form textarea, form select { width: 100%; padding: 12px; margin-bottom: 20px; border-radius: 8px; border: 1px solid #ddd; font-size: 1rem; transition: border-color 0.3s, box-shadow 0.3s; background-color: var(--white); }
+        form input:focus, form textarea:focus, form select:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 4px rgba(10, 116, 218, 0.2); }
+        form button { background-image: linear-gradient(45deg, var(--primary-color), var(--dark-primary)); color: white; padding: 14px 28px; border: none; border-radius: 8px; cursor: pointer; font-size: 1rem; font-weight: 600; transition: all 0.3s; }
+        form button:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(10, 116, 218, 0.3); }
+        form button:disabled { background: #aaa; cursor: not-allowed; box-shadow: none; transform: none; }
         
         #filtro-mes, #filtro-ano {
-            padding: 8px 12px; min-width: 130px;
+            padding: 8px 12px; min-width: 140px;
             -webkit-appearance: none; -moz-appearance: none; appearance: none;
-            background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23007CB2%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22/%3E%3C/svg%3E');
-            background-repeat: no-repeat; background-position: right 15px top 50%; background-size: .65em auto; padding-right: 30px !important;
+            background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%236c757d%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22/%3E%3C/svg%3E');
+            background-repeat: no-repeat; background-position: right 15px top 50%; background-size: .6em auto; padding-right: 35px !important;
         }
 
         #agendamentos-container { display: flex; flex-direction: column; gap: 15px; }
-        .agendamento { background: white; padding: 20px; border-left: 6px solid var(--primary-color); border-radius: 10px; box-shadow: var(--card-shadow); }
+        .agendamento { background: var(--white); padding: 25px; border-left: 6px solid var(--primary-color); border-radius: 10px; box-shadow: var(--card-shadow); }
         .agendamento h3 { margin-bottom: 8px; color: var(--primary-color); font-weight: 600; }
-        .agendamento p { margin: 5px 0; font-size: 0.95rem; line-height: 1.5; }
-        .status { font-weight: bold; margin-top: 10px; }
-        .observacoes-texto { background-color: #f9f9f9; border-left: 3px solid #ddd; padding: 10px; margin-top: 10px; border-radius: 5px; white-space: pre-wrap; }
+        .agendamento p { margin: 5px 0; font-size: 0.95rem; line-height: 1.5; color: var(--text-light); }
+        .agendamento p strong { color: var(--text-color); }
         .botoes-acao { margin-top: 15px; }
         button.acao { margin-right: 8px; padding: 6px 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: opacity 0.3s; }
-        button.acao:hover { opacity: 0.8; }
-        .concluir { background-color: #28a745; color: white; }
-        .cancelar { background-color: #ffc107; color: black; }
-        .excluir { background-color: #dc3545; color: white; }
+        .concluir { background-color: var(--green); color: white; }
+        .excluir { background-color: var(--red); color: white; }
         .auth-container { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
-        .auth-box { width: 100%; max-width: 400px; padding: 40px; background: white; border-radius: var(--border-radius); box-shadow: var(--card-shadow); }
+        .auth-box { width: 100%; max-width: 400px; padding: 40px; background: var(--white); border-radius: var(--border-radius); box-shadow: var(--card-shadow); }
         .hidden { display: none; }
-        @media (max-width: 768px) { header h1 { font-size: 1.8rem; } .container { padding: 15px; } #logout-button { position: static; margin-top: 15px; } .section-header { justify-content: center; text-align: center; } }
-        @media (max-width: 480px) { body { font-size: 14px; } .card-resumo p { font-size: 1.5rem; } form { padding: 20px; } }
     </style>
 </head>
 <body>
@@ -115,30 +122,27 @@
                 <div class="section-header">
                     <h2>Visão Financeira</h2>
                     <div id="filtro-container">
-                        <select id="filtro-mes">
-                            <option value="todos">Todos os Meses</option>
-                            <option value="0">Janeiro</option><option value="1">Fevereiro</option><option value="2">Março</option>
-                            <option value="3">Abril</option><option value="4">Maio</option><option value="5">Junho</option>
-                            <option value="6">Julho</option><option value="7">Agosto</option><option value="8">Setembro</option>
-                            <option value="9">Outubro</option><option value="10">Novembro</option><option value="11">Dezembro</option>
-                        </select>
+                        <select id="filtro-mes"></select>
                         <select id="filtro-ano"></select>
                     </div>
                 </div>
                 <div class="resumo">
-                    <div class="card-resumo"><h3>Ganhos do Período</h3><p id="ganhosMes">R$ 0,00</p></div>
-                    <div class="card-resumo"><h3>Gastos do Período</h3><p id="gastosMes">R$ 0,00</p></div>
-                    <div class="card-resumo"><h3>Lucro do Período</h3><p id="lucroMes">R$ 0,00</p></div>
+                    <div class="card-resumo"><div class="icon green">💰</div><div class="text"><h3>Ganhos do Período</h3><p id="ganhosMes">R$ 0,00</p></div></div>
+                    <div class="card-resumo"><div class="icon red">💸</div><div class="text"><h3>Gastos do Período</h3><p id="gastosMes">R$ 0,00</p></div></div>
+                    <div class="card-resumo"><div class="icon blue">📈</div><div class="text"><h3>Lucro do Período</h3><p id="lucroMes">R$ 0,00</p></div></div>
+                </div>
+                <div id="grafico-container">
+                    <canvas id="grafico-financeiro"></canvas>
                 </div>
             </section>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-    // --- 1. CONFIGURAÇÃO DO SUPABASE ---
+    // --- 1. CONFIGURAÇÃO DO SUPABASE (COM A CHAVE CORRIGIDA) ---
     const SUPABASE_URL = 'https://lsvlfrqqpnryjqskiwkj.supabase.co'; 
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxzdmxmcnFxcG5yeWpxc2tpd2tqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg3NTA5NDIsImV4cCI6MjA3NDMyNjk0Mn0.nKiTPAdGcHKE0KweKVCT2ef3ta267Pprlhmj_-FYpSo';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxzdmxmcnFxcG5yeWpxc2tpd2tqIiwicm9sZSI6ImFub24iLCJpYXQiOjE2Nzg3NTA5NDIsImV4cCI6MTk5NDMyNjk0Mn0.2e1d5o3_hA73-7O3a_4i3_M-z59t3Q4ZBN1g-lYpd7o';
+
     const { createClient } = supabase;
     const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -156,94 +160,111 @@
     let agendamentos = [];
     const filtroMes = document.getElementById('filtro-mes');
     const filtroAno = document.getElementById('filtro-ano');
+    let graficoFinanceiro = null; // Variável para guardar a instância do gráfico
     
     // --- 3. LÓGICA DE NAVEGAÇÃO ---
-    tabProjetos.addEventListener('click', () => {
-        tabProjetos.classList.add('active');
-        tabCaixa.classList.remove('active');
-        projetosSection.classList.remove('hidden');
-        caixaSection.classList.add('hidden');
-    });
-    tabCaixa.addEventListener('click', () => {
-        tabCaixa.classList.add('active');
-        tabProjetos.classList.remove('active');
-        caixaSection.classList.remove('hidden');
-        projetosSection.classList.add('hidden');
-    });
+    tabProjetos.addEventListener('click', () => { tabProjetos.classList.add('active'); tabCaixa.classList.remove('active'); projetosSection.classList.remove('hidden'); caixaSection.classList.add('hidden'); });
+    tabCaixa.addEventListener('click', () => { tabCaixa.classList.add('active'); tabProjetos.classList.remove('active'); caixaSection.classList.remove('hidden'); projetosSection.classList.add('hidden'); });
 
     // --- 4. FUNÇÕES GERAIS E DE PROJETOS ---
     const moeda = (valor) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(valor || 0);
 
-    function popularFiltroAno() { const anoAtual = new Date().getFullYear(); filtroAno.innerHTML = ''; for (let i = anoAtual; i >= anoAtual - 5; i--) { const option = document.createElement('option'); option.value = i; option.textContent = i; filtroAno.appendChild(option); } }
-    
-    function criarAgendamentoHTML(agendamento) { const div = document.createElement("div"); div.className = "agendamento"; div.id = `projeto-${agendamento.id}`; const dataFormatada = new Date(agendamento.data_entrega + 'T03:00:00').toLocaleDateString('pt-BR'); const obsHTML = agendamento.observacoes ? `<p><strong>Observações:</strong></p><p class="observacoes-texto">${agendamento.observacoes}</p>` : ''; div.innerHTML = `<h3>${agendamento.nome}</h3><p><strong>Serviço:</strong> ${agendamento.servico}</p><p><strong>Valor:</strong> ${moeda(agendamento.valor)}</p><p><strong>Gasto:</strong> ${moeda(agendamento.gasto)}</p><p><strong>Data de entrega:</strong> ${dataFormatada}</p>${obsHTML}<p class="status">Status: ${agendamento.concluido ? "✅ Concluído" : "⏳ Pendente"}</p><div class="botoes-acao">${!agendamento.concluido ? `<button class="acao concluir" onclick="concluirAgendamento(${agendamento.id})">Concluir</button>` : `<button class="acao cancelar" onclick="cancelarConclusao(${agendamento.id})">Reabrir</button>`}<button class="acao excluir" onclick="excluirAgendamento(${agendamento.id})">Excluir</button></div>`; return div; }
-    
-    async function carregarDadosErenderizar() { 
-        const { data: { user } } = await db.auth.getUser(); if (!user) return; 
-        const { data, error } = await db.from('agendamentos').select('*').eq('user_id', user.id).order('data_entrega', { ascending: true }); 
-        if (error) { console.error("Erro ao buscar agendamentos", error); return; } 
-        agendamentos = data; 
-        filtrarErenderizar(); 
+    function popularFiltros() {
+        const anoAtual = new Date().getFullYear();
+        filtroAno.innerHTML = '';
+        for (let i = anoAtual; i >= anoAtual - 5; i--) {
+            filtroAno.add(new Option(i, i));
+        }
+
+        const meses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+        filtroMes.innerHTML = '<option value="todos">Todos os Meses</option>';
+        meses.forEach((mes, index) => {
+            filtroMes.add(new Option(mes, index));
+        });
     }
+    
+    function criarAgendamentoHTML(agendamento) { const div = document.createElement("div"); div.className = "agendamento"; div.id = `projeto-${agendamento.id}`; const dataFormatada = new Date(agendamento.data_entrega + 'T03:00:00').toLocaleDateString('pt-BR'); const obsHTML = agendamento.observacoes ? `<p><strong>Observações:</strong></p><p class="observacoes-texto">${agendamento.observacoes}</p>` : ''; div.innerHTML = `<h3>${agendamento.nome}</h3><p><strong>Serviço:</strong> ${agendamento.servico}</p><p><strong>Valor:</strong> ${moeda(agendamento.valor)}</p><p><strong>Gasto:</strong> ${moeda(agendamento.gasto)}</p><p><strong>Data de entrega:</strong> ${dataFormatada}</p><p class="status">Status: ${agendamento.concluido ? "✅ Concluído" : "⏳ Pendente"}</p><div class="botoes-acao">${!agendamento.concluido ? `<button class="acao concluir" onclick="concluirAgendamento(${agendamento.id})">Concluir</button>` : ``}<button class="acao excluir" onclick="excluirAgendamento(${agendamento.id})">Excluir</button></div>`; return div; }
+    
+    async function carregarDadosErenderizar() { const { data: { user } } = await db.auth.getUser(); if (!user) return; const { data, error } = await db.from('agendamentos').select('*').eq('user_id', user.id).order('data_entrega', { ascending: true }); if (error) { console.error("Erro ao buscar agendamentos", error); return; } agendamentos = data; filtrarErenderizar(); }
     
     function filtrarErenderizar() {
         const mesSelecionado = filtroMes.value;
         const anoSelecionado = filtroAno.value;
         let agendamentosFiltrados = agendamentos;
         if (anoSelecionado) {
-            if (mesSelecionado !== 'todos') {
-                agendamentosFiltrados = agendamentos.filter(a => { const dataEntrega = new Date(a.data_entrega + 'T03:00:00'); return dataEntrega.getMonth() == mesSelecionado && dataEntrega.getFullYear() == anoSelecionado; });
-            } else {
-                agendamentosFiltrados = agendamentos.filter(a => { const dataEntrega = new Date(a.data_entrega + 'T03:00:00'); return dataEntrega.getFullYear() == anoSelecionado; });
-            }
+            if (mesSelecionado !== 'todos') { agendamentosFiltrados = agendamentos.filter(a => { const dataEntrega = new Date(a.data_entrega + 'T03:00:00'); return dataEntrega.getMonth() == mesSelecionado && dataEntrega.getFullYear() == anoSelecionado; });
+            } else { agendamentosFiltrados = agendamentos.filter(a => { const dataEntrega = new Date(a.data_entrega + 'T03:00:00'); return dataEntrega.getFullYear() == anoSelecionado; }); }
         }
-        containerProjetos.innerHTML = ""; 
-        if (agendamentosFiltrados.length === 0) { containerProjetos.innerHTML = "<p style='text-align:center;'>Nenhum projeto encontrado para este período.</p>"; } 
-        else { agendamentosFiltrados.forEach(item => { const agendamentoDiv = criarAgendamentoHTML(item); containerProjetos.appendChild(agendamentoDiv); }); }
+        containerProjetos.innerHTML = ""; if (agendamentosFiltrados.length === 0) { containerProjetos.innerHTML = "<p style='text-align:center;'>Nenhum projeto encontrado para este período.</p>"; } else { agendamentosFiltrados.forEach(item => { const agendamentoDiv = criarAgendamentoHTML(item); containerProjetos.appendChild(agendamentoDiv); }); }
         atualizarResumo(agendamentosFiltrados);
+        renderizarGraficoFinanceiro(agendamentos); // O gráfico sempre usa todos os dados do ano
     }
     
-    function atualizarResumo(dadosParaResumo) { 
-        const agendamentosConcluidos = dadosParaResumo.filter(a => a.concluido); 
-        const ganhos = agendamentosConcluidos.reduce((acc, a) => acc + a.valor, 0); 
-        const gastos = agendamentosConcluidos.reduce((acc, a) => acc + a.gasto, 0); 
-        document.getElementById("ganhosMes").textContent = moeda(ganhos); 
-        document.getElementById("gastosMes").textContent = moeda(gastos); 
-        document.getElementById("lucroMes").textContent = moeda(ganhos - gastos); 
-    }
-    
-    formProjetos.addEventListener("submit", async (e) => { 
-        e.preventDefault(); 
-        const submitButton = formProjetos.querySelector('button[type="submit"]');
-        submitButton.disabled = true;
-        submitButton.textContent = 'Salvando...';
+    function atualizarResumo(dadosParaResumo) { const agendamentosConcluidos = dadosParaResumo.filter(a => a.concluido); const ganhos = agendamentosConcluidos.reduce((acc, a) => acc + a.valor, 0); const gastos = agendamentosConcluidos.reduce((acc, a) => acc + a.gasto, 0); document.getElementById("ganhosMes").textContent = moeda(ganhos); document.getElementById("gastosMes").textContent = moeda(gastos); document.getElementById("lucroMes").textContent = moeda(ganhos - gastos); }
 
-        const { data: { user } } = await db.auth.getUser(); 
-        if (!user) { alert("Sessão expirada."); submitButton.disabled = false; submitButton.textContent = 'Salvar Projeto'; return; } 
+    function renderizarGraficoFinanceiro(dados) {
+        const ctx = document.getElementById('grafico-financeiro').getContext('2d');
+        const labels = [];
+        const ganhosData = [];
+        const gastosData = [];
         
-        const novoAgendamento = { nome: document.getElementById("nome").value.trim(), valor: parseFloat(document.getElementById("valor").value), gasto: parseFloat(document.getElementById("gasto").value), servico: document.getElementById("servico").value.trim(), data_entrega: document.getElementById("dataEntrega").value, observacoes: document.getElementById("observacoes").value.trim(), user_id: user.id, concluido: false }; 
-        
-        const { error } = await db.from('agendamentos').insert([novoAgendamento]); 
-        
-        if (error) { 
-            console.error("Erro ao salvar projeto:", error); 
-            alert("Ocorreu um erro ao salvar o projeto."); 
-            submitButton.disabled = false;
-            submitButton.textContent = 'Salvar Projeto';
-        } else { 
-            await carregarDadosErenderizar(); 
-            formProjetos.reset(); 
-            submitButton.disabled = false;
-            submitButton.textContent = 'Salvar Projeto';
-            listaAgendamentos.scrollIntoView({ behavior: 'smooth' }); // Rola até a lista
-        } 
-    });
+        const hoje = new Date();
+        for (let i = 5; i >= 0; i--) {
+            const d = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
+            labels.push(d.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' }));
+            
+            const projetosDoMes = dados.filter(p => {
+                const dataProjeto = new Date(p.data_entrega + 'T03:00:00');
+                return p.concluido && dataProjeto.getMonth() === d.getMonth() && dataProjeto.getFullYear() === d.getFullYear();
+            });
+
+            const ganhosMes = projetosDoMes.reduce((acc, p) => acc + p.valor, 0);
+            const gastosMes = projetosDoMes.reduce((acc, p) => acc + p.gasto, 0);
+            ganhosData.push(ganhosMes);
+            gastosData.push(gastosMes);
+        }
+
+        if (graficoFinanceiro) {
+            graficoFinanceiro.destroy(); // Destroi o gráfico antigo antes de criar um novo
+        }
+
+        graficoFinanceiro = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Ganhos',
+                    data: ganhosData,
+                    backgroundColor: 'rgba(10, 116, 218, 0.7)',
+                    borderColor: 'rgba(10, 116, 218, 1)',
+                    borderWidth: 1,
+                    borderRadius: 5
+                }, {
+                    label: 'Gastos',
+                    data: gastosData,
+                    backgroundColor: 'rgba(220, 53, 69, 0.7)',
+                    borderColor: 'rgba(220, 53, 69, 1)',
+                    borderWidth: 1,
+                    borderRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { beginAtZero: true, ticks: { callback: (value) => moeda(value) } },
+                    x: { grid: { display: false } }
+                },
+                plugins: { legend: { position: 'top' }, tooltip: { callbacks: { label: (context) => `${context.dataset.label}: ${moeda(context.raw)}` } } }
+            }
+        });
+    }
+    
+    formProjetos.addEventListener("submit", async (e) => { e.preventDefault(); const submitButton = formProjetos.querySelector('button[type="submit"]'); submitButton.disabled = true; submitButton.textContent = 'Salvando...'; const { data: { user } } = await db.auth.getUser(); if (!user) { alert("Sessão expirada."); submitButton.disabled = false; submitButton.textContent = 'Salvar Projeto'; return; } const novoAgendamento = { nome: document.getElementById("nome").value.trim(), valor: parseFloat(document.getElementById("valor").value), gasto: parseFloat(document.getElementById("gasto").value), servico: document.getElementById("servico").value.trim(), data_entrega: document.getElementById("dataEntrega").value, observacoes: document.getElementById("observacoes").value.trim(), user_id: user.id, concluido: false }; const { error } = await db.from('agendamentos').insert([novoAgendamento]); if (error) { console.error("Erro ao salvar projeto:", error); alert("Ocorreu um erro ao salvar o projeto."); submitButton.disabled = false; submitButton.textContent = 'Salvar Projeto'; } else { await carregarDadosErenderizar(); formProjetos.reset(); submitButton.disabled = false; submitButton.textContent = 'Salvar Projeto'; listaAgendamentos.scrollIntoView({ behavior: 'smooth' }); } });
     
     filtroMes.addEventListener('change', filtrarErenderizar);
     filtroAno.addEventListener('change', filtrarErenderizar);
     
     window.concluirAgendamento = async function(id) { await db.from('agendamentos').update({ concluido: true }).eq('id', id); carregarDadosErenderizar(); }
-    window.cancelarConclusao = async function(id) { await db.from('agendamentos').update({ concluido: false }).eq('id', id); carregarDadosErenderizar(); }
     window.excluirAgendamento = async function(id) { if (confirm("Deseja realmente excluir este projeto?")) { await db.from('agendamentos').delete().eq('id', id); carregarDadosErenderizar(); } }
 
     // --- 5. LÓGICA DE AUTENTICAÇÃO E INICIALIZAÇÃO ---
@@ -258,12 +279,12 @@
         if (session && session.user) {
             appContainer.classList.remove('hidden');
             authSection.classList.add('hidden');
-            popularFiltroAno(); 
+            popularFiltros(); 
             const hoje = new Date();
             filtroMes.value = hoje.getMonth();
             filtroAno.value = hoje.getFullYear();
             await carregarDadosErenderizar();
-            tabProjetos.click(); // Inicia na aba Projetos por padrão
+            tabProjetos.click();
         } else {
             appContainer.classList.add('hidden');
             authSection.classList.remove('hidden');
