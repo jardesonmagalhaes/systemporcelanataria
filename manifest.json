@@ -1,11 +1,11 @@
 {
-    "name": "System Porcelanataria",
-    "short_name": "SysPorcel",
+    "name": "PJ Porcelanataria",
+    "short_name": "PJ Porcelana",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#f4f6f9",
     "theme_color": "#0a74da",
-    "description": "Gerenciamento de projetos para porcelanataria.",
+    "description": "Gerenciador de agendamentos para PJ Porcelanataria.",
     "icons": [
         {
             "src": "images/icon-192x192.png",
