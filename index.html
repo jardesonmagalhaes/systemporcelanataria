@@ -73,6 +73,7 @@
         .agendamento h3 { margin-bottom: 8px; color: var(--primary-color); font-weight: 600; }
         .agendamento p { margin: 5px 0; font-size: 0.95rem; line-height: 1.5; color: var(--text-light); }
         .agendamento p strong { color: var(--text-color); }
+        .observacoes-texto { background-color: #f9f9f9; border-left: 3px solid #ddd; padding: 10px; margin-top: 10px; border-radius: 5px; white-space: pre-wrap; }
         .botoes-acao { margin-top: 15px; }
         button.acao { margin-right: 8px; padding: 6px 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: opacity 0.3s; }
         .concluir { background-color: var(--green); color: white; }
@@ -84,7 +85,8 @@
 </head>
 <body>
 
-    <div id="auth-section"> </div>
+    <div id="auth-section"> 
+        </div>
 
     <div id="app-container" class="hidden">
         <div class="container">
@@ -163,29 +165,57 @@
         
         let agendamentos = [];
         let graficoFinanceiro = null;
-        let currentUser = null; // <-- VARIÁVEL GLOBAL PARA GUARDAR O USUÁRIO
+        let currentUser = null; 
         
-        // --- 3. LÓGICA DE NAVEGAÇÃO ---
+        // --- 3. LÓGICA DE NAVEGAÇÃO E EVENTOS PRINCIPAIS ---
         tabProjetos.addEventListener('click', () => { tabProjetos.classList.add('active'); tabCaixa.classList.remove('active'); projetosSection.classList.remove('hidden'); caixaSection.classList.add('hidden'); });
         tabCaixa.addEventListener('click', () => { tabCaixa.classList.add('active'); tabProjetos.classList.remove('active'); caixaSection.classList.remove('hidden'); projetosSection.classList.add('hidden'); });
+        
+        // CORREÇÃO 2: Botão de logout movido para fora do onAuthStateChange
+        // Isso garante que o evento seja adicionado apenas uma vez.
+        logoutButton.addEventListener('click', () => { 
+            db.auth.signOut(); 
+        });
 
         // --- 4. FUNÇÕES GERAIS E DE PROJETOS ---
         const moeda = (valor) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(valor || 0);
         function popularFiltros() { const anoAtual = new Date().getFullYear(); filtroAno.innerHTML = ''; for (let i = anoAtual; i >= anoAtual - 5; i--) { filtroAno.add(new Option(i, i)); } const meses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"]; filtroMes.innerHTML = '<option value="todos">Todos os Meses</option>'; meses.forEach((mes, index) => { filtroMes.add(new Option(mes, index)); }); }
-        function criarAgendamentoHTML(agendamento) { const div = document.createElement("div"); div.className = "agendamento"; div.id = `projeto-${agendamento.id}`; const dataFormatada = new Date(agendamento.data_entrega + 'T03:00:00').toLocaleDateString('pt-BR'); const obsHTML = agendamento.observacoes ? `<p><strong>Observações:</strong></p><p class="observacoes-texto">${agendamento.observacoes}</p>` : ''; div.innerHTML = `<h3>${agendamento.nome}</h3><p><strong>Serviço:</strong> ${agendamento.servico}</p><p><strong>Valor:</strong> ${moeda(agendamento.valor)}</p><p><strong>Gasto:</strong> ${moeda(agendamento.gasto)}</p><p><strong>Data de entrega:</strong> ${dataFormatada}</p><p class="status">Status: ${agendamento.concluido ? "✅ Concluído" : "⏳ Pendente"}</p><div class="botoes-acao">${!agendamento.concluido ? `<button class="acao concluir" onclick="concluirAgendamento(${agendamento.id})">Concluir</button>` : ``}<button class="acao excluir" onclick="excluirAgendamento(${agendamento.id})">Excluir</button></div>`; return div; }
+        
+        function criarAgendamentoHTML(agendamento) { 
+            const div = document.createElement("div"); 
+            div.className = "agendamento"; 
+            div.id = `projeto-${agendamento.id}`; 
+            const dataFormatada = new Date(agendamento.data_entrega + 'T03:00:00').toLocaleDateDateString('pt-BR'); 
+            const obsHTML = agendamento.observacoes ? `<p><strong>Observações:</strong></p><p class="observacoes-texto">${agendamento.observacoes}</p>` : ''; 
+            
+            // CORREÇÃO 1: A linha abaixo estava com erros de sintaxe (faltavam crases ``).
+            // O texto não estava sendo tratado como um "template literal", o que quebrava o script.
+            div.innerHTML = `
+                <h3>${agendamento.nome}</h3>
+                <p><strong>Serviço:</strong> ${agendamento.servico}</p>
+                <p><strong>Valor:</strong> ${moeda(agendamento.valor)}</p>
+                <p><strong>Gasto:</strong> ${moeda(agendamento.gasto)}</p>
+                <p><strong>Data de entrega:</strong> ${dataFormatada}</p>
+                ${obsHTML}
+                <p class="status">Status: ${agendamento.concluido ? "✅ Concluído" : "⏳ Pendente"}</p>
+                <div class="botoes-acao">
+                    ${!agendamento.concluido ? `<button class="acao concluir" onclick="concluirAgendamento(${agendamento.id})">Concluir</button>` : ``}
+                    <button class="acao excluir" onclick="excluirAgendamento(${agendamento.id})">Excluir</button>
+                </div>`; 
+            return div; 
+        }
+
         async function carregarDadosErenderizar() { if (!currentUser) return; const { data, error } = await db.from('agendamentos').select('*').eq('user_id', currentUser.id).order('data_entrega', { ascending: true }); if (error) { console.error("Erro ao buscar agendamentos", error); return; } agendamentos = data; filtrarErenderizar(); }
         function filtrarErenderizar() { const mesSelecionado = filtroMes.value; const anoSelecionado = filtroAno.value; let agendamentosFiltrados = agendamentos; if (anoSelecionado) { if (mesSelecionado !== 'todos') { agendamentosFiltrados = agendamentos.filter(a => { const dataEntrega = new Date(a.data_entrega + 'T03:00:00'); return dataEntrega.getMonth() == mesSelecionado && dataEntrega.getFullYear() == anoSelecionado; }); } else { agendamentosFiltrados = agendamentos.filter(a => { const dataEntrega = new Date(a.data_entrega + 'T03:00:00'); return dataEntrega.getFullYear() == anoSelecionado; }); } } containerProjetos.innerHTML = ""; if (agendamentosFiltrados.length === 0) { containerProjetos.innerHTML = "<p style='text-align:center;'>Nenhum projeto encontrado para este período.</p>"; } else { agendamentosFiltrados.forEach(item => { const agendamentoDiv = criarAgendamentoHTML(item); containerProjetos.appendChild(agendamentoDiv); }); } atualizarResumo(agendamentosFiltrados); renderizarGraficoFinanceiro(agendamentos); }
         function atualizarResumo(dadosParaResumo) { const agendamentosConcluidos = dadosParaResumo.filter(a => a.concluido); const ganhos = agendamentosConcluidos.reduce((acc, a) => acc + a.valor, 0); const gastos = agendamentosConcluidos.reduce((acc, a) => acc + a.gasto, 0); document.getElementById("ganhosMes").textContent = moeda(ganhos); document.getElementById("gastosMes").textContent = moeda(gastos); document.getElementById("lucroMes").textContent = moeda(ganhos - gastos); }
         function renderizarGraficoFinanceiro(dados) { const ctx = document.getElementById('grafico-financeiro').getContext('2d'); const labels = []; const ganhosData = []; const gastosData = []; const hoje = new Date(); for (let i = 5; i >= 0; i--) { const d = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1); labels.push(d.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' })); const projetosDoMes = dados.filter(p => { const dataProjeto = new Date(p.data_entrega + 'T03:00:00'); return p.concluido && dataProjeto.getMonth() === d.getMonth() && dataProjeto.getFullYear() === d.getFullYear(); }); const ganhosMes = projetosDoMes.reduce((acc, p) => acc + p.valor, 0); const gastosMes = projetosDoMes.reduce((acc, p) => acc + p.gasto, 0); ganhosData.push(ganhosMes); gastosData.push(gastosMes); } if (graficoFinanceiro) { graficoFinanceiro.destroy(); } graficoFinanceiro = new Chart(ctx, { type: 'bar', data: { labels: labels, datasets: [{ label: 'Ganhos', data: ganhosData, backgroundColor: 'rgba(10, 116, 218, 0.7)', borderColor: 'rgba(10, 116, 218, 1)', borderWidth: 1, borderRadius: 5 }, { label: 'Gastos', data: gastosData, backgroundColor: 'rgba(220, 53, 69, 0.7)', borderColor: 'rgba(220, 53, 69, 1)', borderWidth: 1, borderRadius: 5 }] }, options: { responsive: true, scales: { y: { beginAtZero: true, ticks: { callback: (value) => moeda(value) } }, x: { grid: { display: false } } }, plugins: { legend: { position: 'top' }, tooltip: { callbacks: { label: (context) => `${context.dataset.label}: ${moeda(context.raw)}` } } } } }); }
         
-        // --- FUNÇÃO DE SALVAR PROJETO (CORRIGIDA) ---
         formProjetos.addEventListener("submit", async (e) => {
             e.preventDefault();
             const submitButton = formProjetos.querySelector('button[type="submit"]');
             submitButton.disabled = true;
             submitButton.textContent = 'Salvando...';
 
-            // USA A VARIÁVEL GLOBAL EM VEZ DE CHAMAR A FUNÇÃO QUE TRAVA
             if (!currentUser) {
                 alert("Sessão expirada. Por favor, faça login novamente.");
                 submitButton.disabled = false;
@@ -200,15 +230,15 @@
                 servico: document.getElementById("servico").value.trim(), 
                 data_entrega: document.getElementById("dataEntrega").value, 
                 observacoes: document.getElementById("observacoes").value.trim(), 
-                user_id: currentUser.id, // USA O ID DA VARIÁVEL GLOBAL
+                user_id: currentUser.id,
                 concluido: false 
             };
             
-            const { error } = await db.from('agendamentos').insert([novoAgendamento]); 
+            const { data, error } = await db.from('agendamentos').insert([novoAgendamento]).select(); 
             
             if (error) { 
                 console.error("Erro ao salvar projeto:", error); 
-                alert("Ocorreu um erro ao salvar o projeto."); 
+                alert("Ocorreu um erro ao salvar o projeto: " + error.message); 
                 submitButton.disabled = false;
                 submitButton.textContent = 'Salvar Projeto';
             } else { 
@@ -226,19 +256,14 @@
         window.concluirAgendamento = async function(id) { await db.from('agendamentos').update({ concluido: true }).eq('id', id); carregarDadosErenderizar(); }
         window.excluirAgendamento = async function(id) { if (confirm("Deseja realmente excluir este projeto?")) { await db.from('agendamentos').delete().eq('id', id); carregarDadosErenderizar(); } }
 
-        // --- LÓGICA DE AUTENTICAÇÃO E INICIALIZAÇÃO (CORRIGIDA) ---
+        // --- LÓGICA DE AUTENTICAÇÃO E INICIALIZAÇÃO ---
         db.auth.onAuthStateChange(async (event, session) => { 
-            const authHTML = `<div id="login-container" class="auth-container"><div class="auth-box"><h2 style="text-align: center; color: var(--primary-color); margin-bottom: 25px;">System Porcelanataria</h2><form id="login-form"><label for="login-email">Email</label><input type="email" id="login-email" required /><label for="login-password">Senha</label><input type="password" id="login-password" required /><button type="submit" style="width: 100%;">Entrar</button></form><p id="auth-error" style="color: red; text-align: center; margin-top: 15px;"></p></div></div><div id="update-password-container" class="auth-container hidden"><div class="auth-box"><h2 style="text-align: center; color: var(--primary-color); margin-bottom: 25px;">Crie sua Senha</h2><form id="update-password-form"><label for="new-password">Nova Senha</label><input type="password" id="new-password" required minlength="6" /><button type="submit" style="width: 100%;">Salvar Senha</button></form><p id="update-message" style="text-align: center; margin-top: 15px;"></p></div></div>`;
-            authSection.innerHTML = authHTML;
-            
-            document.getElementById('login-form').addEventListener('submit', async (e) => { e.preventDefault(); document.getElementById('auth-error').textContent = ''; const email = document.getElementById('login-email').value; const password = document.getElementById('login-password').value; const { error } = await db.auth.signInWithPassword({ email, password }); if (error) document.getElementById('auth-error').textContent = 'Email ou senha inválidos.'; });
-            logoutButton.addEventListener('click', () => { db.auth.signOut(); });
-            document.getElementById('update-password-form').addEventListener('submit', async (e) => { e.preventDefault(); const updateMessage = document.getElementById('update-message'); updateMessage.textContent = ''; const password = document.getElementById('new-password').value; const { error } = await db.auth.updateUser({ password: password }); if (error) { updateMessage.style.color = 'red'; updateMessage.textContent = 'Erro: ' + error.message; } else { updateMessage.style.color = 'green'; updateMessage.textContent = 'Senha atualizada! Redirecionando...'; setTimeout(() => { window.location.href = window.location.pathname; }, 2000); } });
-
             if (session && session.user) {
-                currentUser = session.user; // <-- GUARDA O USUÁRIO NA VARIÁVEL GLOBAL
+                currentUser = session.user;
                 appContainer.classList.remove('hidden');
                 authSection.classList.add('hidden');
+                authSection.innerHTML = ''; // Limpa a área de login
+                
                 popularFiltros(); 
                 const hoje = new Date();
                 filtroMes.value = hoje.getMonth();
@@ -246,9 +271,16 @@
                 await carregarDadosErenderizar();
                 tabProjetos.click();
             } else {
-                currentUser = null; // Limpa o usuário ao deslogar
+                currentUser = null;
                 appContainer.classList.add('hidden');
                 authSection.classList.remove('hidden');
+                
+                const authHTML = `<div id="login-container" class="auth-container"><div class="auth-box"><h2 style="text-align: center; color: var(--primary-color); margin-bottom: 25px;">System Porcelanataria</h2><form id="login-form"><label for="login-email">Email</label><input type="email" id="login-email" required /><label for="login-password">Senha</label><input type="password" id="login-password" required /><button type="submit" style="width: 100%;">Entrar</button></form><p id="auth-error" style="color: red; text-align: center; margin-top: 15px;"></p></div></div><div id="update-password-container" class="auth-container hidden"><div class="auth-box"><h2 style="text-align: center; color: var(--primary-color); margin-bottom: 25px;">Crie sua Senha</h2><form id="update-password-form"><label for="new-password">Nova Senha</label><input type="password" id="new-password" required minlength="6" /><button type="submit" style="width: 100%;">Salvar Senha</button></form><p id="update-message" style="text-align: center; margin-top: 15px;"></p></div></div>`;
+                authSection.innerHTML = authHTML;
+
+                document.getElementById('login-form').addEventListener('submit', async (e) => { e.preventDefault(); document.getElementById('auth-error').textContent = ''; const email = document.getElementById('login-email').value; const password = document.getElementById('login-password').value; const { error } = await db.auth.signInWithPassword({ email, password }); if (error) document.getElementById('auth-error').textContent = 'Email ou senha inválidos.'; });
+                document.getElementById('update-password-form').addEventListener('submit', async (e) => { e.preventDefault(); const updateMessage = document.getElementById('update-message'); updateMessage.textContent = ''; const password = document.getElementById('new-password').value; const { error } = await db.auth.updateUser({ password: password }); if (error) { updateMessage.style.color = 'red'; updateMessage.textContent = 'Erro: ' + error.message; } else { updateMessage.style.color = 'green'; updateMessage.textContent = 'Senha atualizada! Redirecionando...'; setTimeout(() => { window.location.href = window.location.pathname; }, 2000); } });
+
                 if (window.location.hash.includes('##')) {
                     document.getElementById('login-container').classList.add('hidden');
                     document.getElementById('update-password-container').classList.remove('hidden');
