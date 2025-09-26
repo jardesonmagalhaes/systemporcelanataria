@@ -8,6 +8,7 @@
     <link rel="apple-touch-icon" href="images/icon-192x192.png">
     <link rel="icon" href="favicon.ico" type="image/x-icon">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --primary-color: #0a74da;
@@ -24,32 +25,53 @@
         html { scroll-behavior: smooth; }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Poppins", sans-serif; }
         body { background-color: var(--light-gray); color: var(--text-color); }
-        .container { max-width: 900px; margin: 0 auto; padding: 20px; }
-        header { text-align: center; margin-bottom: 30px; position: relative; }
-        header h1 { font-size: 2.2rem; color: var(--primary-color); font-weight: 700; }
+        .container { max-width: 1000px; margin: 0 auto; padding: 20px; }
+        header { text-align: center; margin-bottom: 20px; position: relative; }
+        header h1 { font-size: 2.5rem; color: var(--primary-color); font-weight: 700; letter-spacing: -1px; }
+        header p { color: var(--text-light); margin-top: 5px; font-size: 1.1rem; }
         #logout-button { background: var(--red); color: white; padding: 8px 15px; border: none; border-radius: 8px; cursor: pointer; position: absolute; top: 0; right: 0; transition: all 0.3s; }
-        #logout-button:hover { background: #c0392b; }
+        #logout-button:hover { background: #c0392b; transform: translateY(-2px); }
         
-        .resumo { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 40px; }
-        .card-resumo { background: var(--white); padding: 25px; border-radius: var(--border-radius); box-shadow: var(--card-shadow); text-align: center; }
-        .card-resumo h3 { font-size: 1rem; font-weight: 500; color: var(--text-light); margin-bottom: 8px; }
-        .card-resumo p { font-size: 1.8rem; font-weight: 600; color: var(--primary-color); }
-        
+        .nav-tabs { display: flex; gap: 10px; border-bottom: 2px solid #ddd; margin-bottom: 30px; }
+        .nav-tab { padding: 10px 20px; cursor: pointer; background: transparent; border: none; font-size: 1.1rem; font-weight: 600; color: var(--text-light); border-bottom: 4px solid transparent; transition: all 0.3s; }
+        .nav-tab.active { color: var(--primary-color); border-bottom-color: var(--primary-color); }
+
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;}
+        .section-header h2 { font-size: 1.8rem; font-weight: 600; color: var(--text-color); }
+        #filtro-container { display: flex; gap: 15px; align-items: center; }
+
+        .resumo { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 25px; }
+        .card-resumo { background: var(--white); display: flex; align-items: center; gap: 20px; padding: 25px; border-radius: var(--border-radius); box-shadow: var(--card-shadow); transition: all 0.3s; }
+        .card-resumo:hover { transform: translateY(-5px); box-shadow: 0 8px 30px rgba(0,0,0,0.1); }
+        .card-resumo .icon { font-size: 2.5rem; padding: 15px; border-radius: 50%; display: grid; place-items: center; }
+        .card-resumo .icon.green { background: #e9f7ef; color: var(--green); }
+        .card-resumo .icon.red { background: #fceeee; color: var(--red); }
+        .card-resumo .icon.blue { background: #e7f3fe; color: var(--primary-color); }
+        .card-resumo .text h3 { font-size: 1rem; font-weight: 500; color: var(--text-light); margin-bottom: 5px; }
+        .card-resumo .text p { font-size: 1.8rem; font-weight: 700; color: var(--text-color); }
+
         form { background: var(--white); padding: 30px; border-radius: var(--border-radius); box-shadow: var(--card-shadow); margin-bottom: 40px; }
-        form h2 { margin-bottom: 25px; color: var(--primary-color); font-weight: 600; }
+        form h2 { margin-bottom: 25px; color: var(--primary-color); font-weight: 600; font-size: 1.5rem; }
         form label { display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-light); }
-        form input, form textarea { width: 100%; padding: 12px; margin-bottom: 20px; border-radius: 8px; border: 1px solid #ddd; font-size: 1rem; }
-        form button { background-image: linear-gradient(45deg, var(--primary-color), var(--dark-primary)); color: white; padding: 14px 28px; border: none; border-radius: 8px; cursor: pointer; font-size: 1rem; font-weight: 600; }
-        form button:disabled { background: #aaa; cursor: not-allowed; }
+        form input, form textarea, form select { width: 100%; padding: 12px; margin-bottom: 20px; border-radius: 8px; border: 1px solid #ddd; font-size: 1rem; transition: border-color 0.3s, box-shadow 0.3s; background-color: var(--white); }
+        form input:focus, form textarea:focus, form select:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 4px rgba(10, 116, 218, 0.2); }
+        form button { background-image: linear-gradient(45deg, var(--primary-color), var(--dark-primary)); color: white; padding: 14px 28px; border: none; border-radius: 8px; cursor: pointer; font-size: 1rem; font-weight: 600; transition: all 0.3s; }
+        form button:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(10, 116, 218, 0.3); }
+        form button:disabled { background: #aaa; cursor: not-allowed; box-shadow: none; transform: none; }
+        
+        #filtro-mes, #filtro-ano {
+            padding: 8px 12px; border-radius: 8px; border: 1px solid #ddd;
+        }
 
         #agendamentos-container { display: flex; flex-direction: column; gap: 15px; }
-        .agendamento { background: var(--white); padding: 25px; border-radius: 10px; box-shadow: var(--card-shadow); }
-        .agendamento h3 { color: var(--primary-color); }
+        .agendamento { background: var(--white); padding: 25px; border-left: 6px solid var(--primary-color); border-radius: 10px; box-shadow: var(--card-shadow); }
+        .agendamento h3 { margin-bottom: 8px; color: var(--primary-color); font-weight: 600; }
+        .agendamento p { margin: 5px 0; font-size: 0.95rem; line-height: 1.5; color: var(--text-light); }
+        .agendamento p strong { color: var(--text-color); }
         .botoes-acao { margin-top: 15px; }
-        button.acao { margin-right: 8px; padding: 6px 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; font-weight: 500; }
+        button.acao { margin-right: 8px; padding: 6px 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: opacity 0.3s; }
         .concluir { background-color: var(--green); color: white; }
         .excluir { background-color: var(--red); color: white; }
-        
         .auth-container { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
         .auth-box { width: 100%; max-width: 400px; padding: 40px; background: var(--white); border-radius: var(--border-radius); box-shadow: var(--card-shadow); }
         .hidden { display: none; }
@@ -63,31 +85,48 @@
         <div class="container">
             <header>
                 <h1>System Porcelanataria</h1>
+                <p>Gerenciamento Simplificado</p>
                 <button id="logout-button">Sair</button>
             </header>
 
-            <section class="resumo">
-                <div class="card-resumo"><h3>Ganhos do Mês</h3><p id="ganhosMes">R$ 0,00</p></div>
-                <div class="card-resumo"><h3>Gastos do Mês</h3><p id="gastosMes">R$ 0,00</p></div>
-                <div class="card-resumo"><h3>Lucro do Mês</h3><p id="lucroMes">R$ 0,00</p></div>
-            </section>
+            <nav class="nav-tabs">
+                <button id="tab-projetos" class="nav-tab active">Projetos</button>
+                <button id="tab-caixa" class="nav-tab">Caixa</button>
+            </nav>
 
-            <main>
-                <form id="agendamento-form">
-                    <h2>Novo Projeto</h2>
-                    <label for="nome">Nome do Cliente</label><input type="text" id="nome" required />
-                    <label for="valor">Valor do Serviço (R$)</label><input type="number" step="0.01" id="valor" required />
-                    <label for="gasto">Gasto com Material (R$)</label><input type="number" step="0.01" id="gasto" required />
-                    <label for="servico">Serviço</label><input type="text" id="servico" required />
-                    <label for="dataEntrega">Data de Entrega</label><input type="date" id="dataEntrega" required />
-                    <label for="observacoes">Observações</label><textarea id="observacoes" rows="3"></textarea>
-                    <button type="submit">Salvar Projeto</button>
-                </form>
-                <div id="lista-agendamentos" style="margin-top: 40px;">
-                    <h2 style="text-align: center; margin-bottom: 20px">Projetos Cadastrados</h2>
-                    <div id="agendamentos-container"></div>
+            <section id="projetos-section">
+                <main>
+                    <form id="agendamento-form">
+                        <h2>Novo Projeto</h2>
+                        <label for="nome">Nome do Cliente</label><input type="text" id="nome" required />
+                        <label for="valor">Valor do Serviço (R$)</label><input type="number" step="0.01" id="valor" required />
+                        <label for="gasto">Gasto com Material (R$)</label><input type="number" step="0.01" id="gasto" required />
+                        <label for="servico">Serviço</label><input type="text" id="servico" required />
+                        <label for="dataEntrega">Data de Entrega</label><input type="date" id="dataEntrega" required />
+                        <label for="observacoes">Observações</label><textarea id="observacoes" rows="3"></textarea>
+                        <button type="submit">Salvar Projeto</button>
+                    </form>
+                    <div id="lista-agendamentos">
+                        <h2 style="text-align: center; margin-bottom: 20px">Projetos Cadastrados</h2>
+                        <div id="agendamentos-container"></div>
+                    </div>
+                </main>
+            </section>
+            
+            <section id="caixa-section" class="hidden">
+                <div class="section-header">
+                    <h2>Visão Financeira</h2>
+                    <div id="filtro-container">
+                        <select id="filtro-mes"></select>
+                        <select id="filtro-ano"></select>
+                    </div>
                 </div>
-            </main>
+                <div class="resumo">
+                    <div class="card-resumo"><div class="icon green">💰</div><div class="text"><h3>Ganhos do Período</h3><p id="ganhosPeriodo">R$ 0,00</p></div></div>
+                    <div class="card-resumo"><div class="icon red">💸</div><div class="text"><h3>Gastos do Período</h3><p id="gastosPeriodo">R$ 0,00</p></div></div>
+                    <div class="card-resumo"><div class="icon blue">📈</div><div class="text"><h3>Lucro do Período</h3><p id="lucroPeriodo">R$ 0,00</p></div></div>
+                </div>
+                </section>
         </div>
     </div>
     
@@ -103,16 +142,49 @@
         const authSection = document.getElementById('auth-section');
         const appContainer = document.getElementById('app-container');
         const logoutButton = document.getElementById('logout-button');
+        const tabProjetos = document.getElementById('tab-projetos');
+        const tabCaixa = document.getElementById('tab-caixa');
+        const projetosSection = document.getElementById('projetos-section');
+        const caixaSection = document.getElementById('caixa-section');
         const formProjetos = document.getElementById("agendamento-form");
         const containerProjetos = document.getElementById("agendamentos-container");
         const listaAgendamentos = document.getElementById('lista-agendamentos');
+        const filtroMes = document.getElementById('filtro-mes');
+        const filtroAno = document.getElementById('filtro-ano');
         
         let agendamentos = [];
         let currentUser = null;
         
-        // --- 3. FUNÇÕES DA APLICAÇÃO ---
+        // --- 3. LÓGICA DE NAVEGAÇÃO ENTRE ABAS ---
+        tabProjetos.addEventListener('click', () => {
+            tabProjetos.classList.add('active');
+            tabCaixa.classList.remove('active');
+            projetosSection.classList.remove('hidden');
+            caixaSection.classList.add('hidden');
+        });
+        tabCaixa.addEventListener('click', () => {
+            tabCaixa.classList.add('active');
+            tabProjetos.classList.remove('active');
+            caixaSection.classList.remove('hidden');
+            projetosSection.classList.add('hidden');
+        });
+
+        // --- 4. FUNÇÕES DA APLICAÇÃO ---
         const moeda = (valor) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(valor || 0);
 
+        function popularFiltros() {
+            const anoAtual = new Date().getFullYear();
+            filtroAno.innerHTML = '';
+            for (let i = anoAtual; i >= anoAtual - 5; i--) {
+                filtroAno.add(new Option(i, i));
+            }
+            const meses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+            filtroMes.innerHTML = '<option value="todos">Todos os Meses</option>';
+            meses.forEach((mes, index) => {
+                filtroMes.add(new Option(mes, index));
+            });
+        }
+        
         function criarAgendamentoHTML(agendamento) {
             const div = document.createElement("div");
             div.className = "agendamento";
@@ -133,22 +205,32 @@
             return div;
         }
 
-        function atualizarResumo() {
-            const hoje = new Date();
-            const mesAtual = hoje.getMonth();
-            const anoAtual = hoje.getFullYear();
-
-            const projetosConcluidosDoMes = agendamentos.filter(a => {
-                const dataEntrega = new Date(a.data_entrega + 'T03:00:00');
-                return a.concluido && dataEntrega.getMonth() === mesAtual && dataEntrega.getFullYear() === anoAtual;
-            });
-
-            const ganhos = projetosConcluidosDoMes.reduce((acc, a) => acc + a.valor, 0);
-            const gastos = projetosConcluidosDoMes.reduce((acc, a) => acc + a.gasto, 0);
+        function atualizarResumoFinanceiro() {
+            const mesSelecionado = filtroMes.value;
+            const anoSelecionado = filtroAno.value;
             
-            document.getElementById("ganhosMes").textContent = moeda(ganhos);
-            document.getElementById("gastosMes").textContent = moeda(gastos);
-            document.getElementById("lucroMes").textContent = moeda(ganhos - gastos);
+            let projetosFiltrados = agendamentos.filter(a => a.concluido); // Apenas projetos concluídos geram caixa
+
+            if (anoSelecionado) {
+                projetosFiltrados = projetosFiltrados.filter(a => {
+                    const dataEntrega = new Date(a.data_entrega + 'T03:00:00');
+                    return dataEntrega.getFullYear() == anoSelecionado;
+                });
+            }
+
+            if (mesSelecionado !== 'todos') {
+                projetosFiltrados = projetosFiltrados.filter(a => {
+                    const dataEntrega = new Date(a.data_entrega + 'T03:00:00');
+                    return dataEntrega.getMonth() == mesSelecionado;
+                });
+            }
+
+            const ganhos = projetosFiltrados.reduce((acc, a) => acc + a.valor, 0);
+            const gastos = projetosFiltrados.reduce((acc, a) => acc + a.gasto, 0);
+            
+            document.getElementById("ganhosPeriodo").textContent = moeda(ganhos);
+            document.getElementById("gastosPeriodo").textContent = moeda(gastos);
+            document.getElementById("lucroPeriodo").textContent = moeda(ganhos - gastos);
         }
 
         async function carregarDadosErenderizar() {
@@ -158,13 +240,15 @@
             if (error) { console.error("Erro ao buscar agendamentos", error); return; }
             
             agendamentos = data;
+            // Renderiza a lista de projetos na aba de projetos
             containerProjetos.innerHTML = "";
             if (agendamentos.length > 0) {
                 agendamentos.forEach(item => containerProjetos.appendChild(criarAgendamentoHTML(item)));
             } else {
                 containerProjetos.innerHTML = "<p style='text-align:center;'>Nenhum projeto cadastrado ainda.</p>";
             }
-            atualizarResumo();
+            // Atualiza os cálculos da aba de caixa
+            atualizarResumoFinanceiro();
         }
 
         formProjetos.addEventListener("submit", async (e) => {
@@ -204,13 +288,16 @@
             submitButton.disabled = false;
             submitButton.textContent = 'Salvar Projeto';
         });
+        
+        filtroMes.addEventListener('change', atualizarResumoFinanceiro);
+        filtroAno.addEventListener('change', atualizarResumoFinanceiro);
 
         window.concluirAgendamento = async function(id) { await db.from('agendamentos').update({ concluido: true }).eq('id', id); await carregarDadosErenderizar(); }
         window.excluirAgendamento = async function(id) { if (confirm("Deseja realmente excluir este projeto?")) { await db.from('agendamentos').delete().eq('id', id); await carregarDadosErenderizar(); } }
 
-        // --- 4. LÓGICA DE AUTENTICAÇÃO ---
+        // --- 5. LÓGICA DE AUTENTICAÇÃO ---
         db.auth.onAuthStateChange(async (event, session) => { 
-            const authHTML = `<div id="login-container" class="auth-container"><div class="auth-box"><h2>System Porcelanataria</h2><form id="login-form"><label for="login-email">Email</label><input type="email" id="login-email" required /><label for="login-password">Senha</label><input type="password" id="login-password" required /><button type="submit" style="width: 100%;">Entrar</button></form><p id="auth-error" style="color: red; text-align: center; margin-top: 15px;"></p></div></div><div id="update-password-container" class="auth-container hidden"><div class="auth-box"><h2>Crie sua Senha</h2><form id="update-password-form"><label for="new-password">Nova Senha</label><input type="password" id="new-password" required minlength="6" /><button type="submit" style="width: 100%;">Salvar Senha</button></form><p id="update-message" style="text-align: center; margin-top: 15px;"></p></div></div>`;
+            const authHTML = `<div id="login-container" class="auth-container"><div class="auth-box"><h2 style="text-align: center; color: var(--primary-color); margin-bottom: 25px;">System Porcelanataria</h2><form id="login-form"><label for="login-email">Email</label><input type="email" id="login-email" required /><label for="login-password">Senha</label><input type="password" id="login-password" required /><button type="submit" style="width: 100%;">Entrar</button></form><p id="auth-error" style="color: red; text-align: center; margin-top: 15px;"></p></div></div><div id="update-password-container" class="auth-container hidden"><div class="auth-box"><h2 style="text-align: center; color: var(--primary-color); margin-bottom: 25px;">Crie sua Senha</h2><form id="update-password-form"><label for="new-password">Nova Senha</label><input type="password" id="new-password" required minlength="6" /><button type="submit" style="width: 100%;">Salvar Senha</button></form><p id="update-message" style="text-align: center; margin-top: 15px;"></p></div></div>`;
             authSection.innerHTML = authHTML;
             
             const loginForm = document.getElementById('login-form');
@@ -224,7 +311,14 @@
                 currentUser = session.user;
                 appContainer.classList.remove('hidden');
                 authSection.classList.add('hidden');
+                
+                popularFiltros(); 
+                const hoje = new Date();
+                filtroMes.value = 'todos'; // Inicia mostrando todos os meses
+                filtroAno.value = hoje.getFullYear();
+
                 await carregarDadosErenderizar();
+                tabProjetos.click(); // Garante que a aba de projetos seja a inicial
             } else {
                 currentUser = null;
                 appContainer.classList.add('hidden');
