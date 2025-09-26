@@ -397,13 +397,14 @@
         });
 
         loginForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            authError.textContent = '';
-            const email = document.getElementById('login-email').value;
-            const password = document.getElementById('login-password').value;
-            const { error } = await db.auth.signInWithPassword({ email, password });
-            if (error) authError.textContent = 'Email ou senha inválidos.';
-        });
+    console.log("Botão Entrar clicado!"); // <-- ADICIONE ESTA LINHA
+    e.preventDefault();
+    authError.textContent = '';
+    const email = document.getElementById('login-email').value;
+    const password = document.getElementById('login-password').value;
+    const { error } = await db.auth.signInWithPassword({ email, password });
+    if (error) authError.textContent = 'Email ou senha inválidos.';
+});
 
         logoutButton.addEventListener('click', () => {
             db.auth.signOut();
