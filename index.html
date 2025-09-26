@@ -85,6 +85,12 @@
         .excluir { background-color: var(--red); color: white; }
         .hidden { display: none; }
 
+        /* --- Estilos para os Novos Botões de Filtro --- */
+        #filtro-container { display: flex; gap: 10px; flex-wrap: wrap; }
+        .filtro-btn { padding: 8px 16px; border: 1px solid #ddd; background-color: var(--white); border-radius: 20px; cursor: pointer; font-weight: 500; color: var(--text-light); transition: all 0.3s ease; }
+        .filtro-btn:hover { background-color: #e9ecef; border-color: #ccc; }
+        .filtro-btn.active { background-color: var(--primary-color); color: var(--white); border-color: var(--primary-color); font-weight: 600; }
+
         /* --- Responsividade --- */
         @media (max-width: 768px) {
             header h1 { font-size: 2rem; }
@@ -146,11 +152,13 @@
             <section id="dashboard-section">
                 <div class="section-header">
                     <h2>Visão Financeira</h2>
+                    <div id="filtro-container">
+                        </div>
                 </div>
                 <div class="resumo">
-                    <div class="card-resumo"><div class="icon green">💰</div><div class="text"><h3>Ganhos do Mês</h3><p id="ganhosMes">R$ 0,00</p></div></div>
-                    <div class="card-resumo"><div class="icon red">💸</div><div class="text"><h3>Gastos do Mês</h3><p id="gastosMes">R$ 0,00</p></div></div>
-                    <div class="card-resumo"><div class="icon blue">📈</div><div class="text"><h3>Lucro do Mês</h3><p id="lucroMes">R$ 0,00</p></div></div>
+                    <div class="card-resumo"><div class="icon green">💰</div><div class="text"><h3>Ganhos do Período</h3><p id="ganhosMes">R$ 0,00</p></div></div>
+                    <div class="card-resumo"><div class="icon red">💸</div><div class="text"><h3>Gastos do Período</h3><p id="gastosMes">R$ 0,00</p></div></div>
+                    <div class="card-resumo"><div class="icon blue">📈</div><div class="text"><h3>Lucro do Período</h3><p id="lucroMes">R$ 0,00</p></div></div>
                 </div>
                 <div id="grafico-container">
                     <canvas id="grafico-financeiro"></canvas>
@@ -210,7 +218,6 @@
             const div = document.createElement("div");
             div.className = "agendamento";
             div.id = `projeto-${agendamento.id}`;
-            // Adiciona 'T03:00:00' para corrigir problemas de fuso horário que podem mudar a data
             const dataFormatada = new Date(agendamento.data_entrega + 'T03:00:00').toLocaleDateString('pt-BR');
             const obsHTML = agendamento.observacoes ? `<p><strong>Observações:</strong> ${agendamento.observacoes}</p>` : '';
             div.innerHTML = `
@@ -242,6 +249,7 @@
             }
             
             agendamentos = data;
+            
             containerProjetos.innerHTML = "";
             if (agendamentos.length > 0) {
                 agendamentos.forEach(item => containerProjetos.appendChild(criarAgendamentoHTML(item)));
@@ -249,33 +257,68 @@
                 containerProjetos.innerHTML = "<p style='text-align:center;'>Nenhum projeto cadastrado ainda.</p>";
             }
             
-            atualizarDashboard();
+            popularFiltrosDinamicos();
+            filtrarErenderizarDashboard('todos');
         }
 
-        function atualizarDashboard() {
-            // Atualiza os cards de resumo
-            const hoje = new Date();
-            const mesAtual = hoje.getMonth();
-            const anoAtual = hoje.getFullYear();
+        function popularFiltrosDinamicos() {
+            const filtroContainer = document.getElementById('filtro-container');
+            filtroContainer.innerHTML = '';
 
-            const projetosConcluidosDoMes = agendamentos.filter(a => {
-                const dataEntrega = new Date(a.data_entrega + 'T03:00:00');
-                return a.concluido && dataEntrega.getMonth() === mesAtual && dataEntrega.getFullYear() === anoAtual;
+            const periodos = new Set(agendamentos.map(a => a.data_entrega.substring(0, 7)));
+
+            const btnTodos = document.createElement('button');
+            btnTodos.className = 'filtro-btn active';
+            btnTodos.textContent = 'Ver Tudo';
+            btnTodos.dataset.periodo = 'todos';
+            btnTodos.onclick = () => filtrarErenderizarDashboard('todos');
+            filtroContainer.appendChild(btnTodos);
+
+            Array.from(periodos).sort().reverse().forEach(periodo => {
+                const [ano, mes] = periodo.split('-');
+                const data = new Date(ano, mes - 1);
+                const nomeMes = data.toLocaleString('pt-BR', { month: 'long' });
+                const nomeAno = data.getFullYear();
+
+                const btn = document.createElement('button');
+                btn.className = 'filtro-btn';
+                btn.textContent = `${nomeMes.charAt(0).toUpperCase() + nomeMes.slice(1)} ${nomeAno}`;
+                btn.dataset.periodo = periodo;
+                btn.onclick = () => filtrarErenderizarDashboard(periodo);
+                filtroContainer.appendChild(btn);
+            });
+        }
+
+        function filtrarErenderizarDashboard(periodoSelecionado) {
+            document.querySelectorAll('.filtro-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.periodo === periodoSelecionado);
             });
 
-            const ganhos = projetosConcluidosDoMes.reduce((acc, a) => acc + a.valor, 0);
-            const gastos = projetosConcluidosDoMes.reduce((acc, a) => acc + a.gasto, 0);
-            
-            document.getElementById("ganhosMes").textContent = moeda(ganhos);
-            document.getElementById("gastosMes").textContent = moeda(gastos);
-            document.getElementById("lucroMes").textContent = moeda(ganhos - gastos);
+            let dadosFiltrados = agendamentos;
+            if (periodoSelecionado !== 'todos') {
+                dadosFiltrados = agendamentos.filter(a => a.data_entrega.startsWith(periodoSelecionado));
+            }
 
-            // Renderiza o gráfico
+            const projetosConcluidosFiltrados = dadosFiltrados.filter(a => a.concluido);
+
+            const ganhos = projetosConcluidosFiltrados.reduce((acc, a) => acc + a.valor, 0);
+            const gastos = projetosConcluidosFiltrados.reduce((acc, a) => acc + a.gasto, 0);
+            
+            const ganhosMesEl = document.getElementById("ganhosMes");
+            const gastosMesEl = document.getElementById("gastosMes");
+            const lucroMesEl = document.getElementById("lucroMes");
+
+            if(ganhosMesEl) ganhosMesEl.textContent = moeda(ganhos);
+            if(gastosMesEl) gastosMesEl.textContent = moeda(gastos);
+            if(lucroMesEl) lucroMesEl.textContent = moeda(ganhos - gastos);
+            
             renderizarGraficoFinanceiro(agendamentos);
         }
 
         function renderizarGraficoFinanceiro(dados) {
-            const ctx = document.getElementById('grafico-financeiro').getContext('2d');
+            const canvas = document.getElementById('grafico-financeiro');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
             const labels = [];
             const ganhosData = [];
             const gastosData = [];
@@ -383,7 +426,7 @@
                 appContainer.classList.remove('hidden');
                 authSection.classList.add('hidden');
                 await carregarDadosErenderizar();
-                tabDashboard.click(); // Começa mostrando o Dashboard por padrão
+                tabProjetos.click(); 
             } else {
                 currentUser = null;
                 appContainer.classList.add('hidden');
