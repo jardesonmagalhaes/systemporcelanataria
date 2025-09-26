@@ -34,7 +34,7 @@
         .auth-container { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
         .auth-box { width: 100%; max-width: 400px; padding: 40px; background: var(--white); border-radius: var(--border-radius); box-shadow: var(--card-shadow); text-align: center; }
         .auth-box h2 { color: var(--primary-color); margin-bottom: 25px; }
-        .auth-box input { margin-bottom: 20px; } /* Ajuste de espaço */
+        .auth-box input { margin-bottom: 20px; }
 
         /* --- Estrutura Principal da Aplicação --- */
         header { text-align: center; margin-bottom: 20px; position: relative; }
@@ -163,16 +163,12 @@
 
     <script>
         // --- 1. CONFIGURAÇÃO DO SUPABASE ---
-const SUPABASE_URL = 'https://mlpomropczbbuswgwgtpv.supabase.co'; 
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1scG9tcnFwY3piYnVjd2d3dHB2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg1NjM4ODQsImV4cCI6MjA3NDEzOTg4NH0.CrhmRf9CHzZ7KSvOQqN4TarMcryyPo4CGSHG6Mwq8yI';
+        const SUPABASE_URL = "https://mlpomropczbbuswgwgtpv.supabase.co"; 
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1scG9tcnFwY3piYnVjd2d3dHB2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg1NjM4ODQsImV4cCI6MjA3NDEzOTg4NH0.CrhmRf9CHzZ7KSvOQqN4TarMcryyPo4CGSHG6Mwq8yI"; 
+        
+        const { createClient } = supabase;
+        const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// Verificação para garantir que as chaves foram inseridas <<-- APAGUE ISSO
-// if (...) { ... }  <<-- APAGUE ISSO
-
-const { createClient } = supabase;
-const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-// ... o resto do seu código continua normalmente
         // --- 2. SELETORES DE ELEMENTOS E VARIÁVEIS GLOBAIS ---
         const authSection = document.getElementById('auth-section');
         const appContainer = document.getElementById('app-container');
@@ -396,14 +392,13 @@ const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         });
 
         loginForm.addEventListener('submit', async (e) => {
-    console.log("Botão Entrar clicado!"); // <-- ADICIONE ESTA LINHA
-    e.preventDefault();
-    authError.textContent = '';
-    const email = document.getElementById('login-email').value;
-    const password = document.getElementById('login-password').value;
-    const { error } = await db.auth.signInWithPassword({ email, password });
-    if (error) authError.textContent = 'Email ou senha inválidos.';
-});
+            e.preventDefault();
+            authError.textContent = '';
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            const { error } = await db.auth.signInWithPassword({ email, password });
+            if (error) authError.textContent = 'Email ou senha inválidos.';
+        });
 
         logoutButton.addEventListener('click', () => {
             db.auth.signOut();
