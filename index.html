@@ -462,7 +462,7 @@ if ('serviceWorker' in navigator) {
             .catch(err => console.log('Falha ao registrar Service Worker:', err));
     });
 
-    // --- 5. LÓGICA DO PWA (APP DE CELULAR) ---
+   // --- 5. LÓGICA DO PWA (APP DE CELULAR) ---
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('/sw.js')
@@ -470,7 +470,6 @@ if ('serviceWorker' in navigator) {
                 .catch(err => console.log('Falha ao registrar Service Worker:', err));
         });
     }
-
     </script>
 </body>
 </html>
