@@ -163,17 +163,16 @@
 
     <script>
         // --- 1. CONFIGURAÇÃO DO SUPABASE ---
-        const SUPABASE_URL = 'https://mlpomropczbbuswgwgtpv.supabase.co'; 
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1scG9tcnFwY3piYnVjd2d3dHB2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg1NjM4ODQsImV4cCI6MjA3NDEzOTg4NH0.CrhmRf9CHzZ7KSvOQqN4TarMcryyPo4CGSHG6Mwq8yI';
-        
-        // Verificação para garantir que as chaves foram inseridas
-        if (SUPABASE_URL === 'https://mlpomropczbbuswgwgtpv.supabase.co' || SUPABASE_ANON_KEY === 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1scG9tcnFwY3piYnVjd2d3dHB2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg1NjM4ODQsImV4cCI6MjA3NDEzOTg4NH0.CrhmRf9CHzZ7KSvOQqN4TarMcryyPo4CGSHG6Mwq8yI') {
-            alert('ERRO: Configure suas chaves do Supabase no código JavaScript!');
-        }
+const SUPABASE_URL = 'https://mlpomropczbbuswgwgtpv.supabase.co'; 
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1scG9tcnFwY3piYnVjd2d3dHB2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg1NjM4ODQsImV4cCI6MjA3NDEzOTg4NH0.CrhmRf9CHzZ7KSvOQqN4TarMcryyPo4CGSHG6Mwq8yI';
 
-        const { createClient } = supabase;
-        const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Verificação para garantir que as chaves foram inseridas <<-- APAGUE ISSO
+// if (...) { ... }  <<-- APAGUE ISSO
 
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ... o resto do seu código continua normalmente
         // --- 2. SELETORES DE ELEMENTOS E VARIÁVEIS GLOBAIS ---
         const authSection = document.getElementById('auth-section');
         const appContainer = document.getElementById('app-container');
